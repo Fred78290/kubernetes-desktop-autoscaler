@@ -16,8 +16,8 @@ ARG BASEIMAGE=gcr.io/distroless/static:nonroot-arm64
 FROM $BASEIMAGE
 LABEL maintainer="Frederic Boltz <frederic.boltz@gmail.com>"
 
-COPY out/linux/arm64/vsphere-autoscaler /usr/local/bin/vsphere-autoscaler
+COPY out/linux/arm64/vmware-desktop-autoscaler /usr/local/bin/vmware-desktop-autoscaler
 
 EXPOSE 5200
 
-CMD ["/usr/local/bin/vsphere-autoscaler"]
+CMD ["/usr/local/bin/vmware-desktop-autoscaler"]

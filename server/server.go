@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Fred78290/kubernetes-desktop-autoscaler/api"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/constantes"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/externalgrpc"
 	apigrpc "github.com/Fred78290/kubernetes-desktop-autoscaler/grpc"
@@ -47,7 +48,7 @@ type AutoScalerServerApp struct {
 	apigrpc.UnimplementedPricingModelServiceServer
 	ResourceLimiter *types.ResourceLimiter                `json:"limits"`
 	Groups          map[string]*AutoScalerServerNodeGroup `json:"groups"`
-	NodesDefinition []*apigrpc.NodeGroupDef               `json:"nodedefs"`
+	NodesDefinition *apigrpc.NodeGroupDef                 `json:"nodedefs"`
 	AutoProvision   bool                                  `json:"auto"`
 	configuration   *types.AutoScalerServerConfig
 	running         bool
@@ -173,45 +174,44 @@ func (s *AutoScalerServerApp) doAutoProvision() error {
 	var formerNodes map[string]*AutoScalerServerNode
 	var err error
 
-	for _, nodeGroupDef := range s.NodesDefinition {
-		nodeGroupIdentifier := nodeGroupDef.GetNodeGroupID()
+	nodeGroupDef := s.NodesDefinition
+	nodeGroupIdentifier := nodeGroupDef.GetNodeGroupID()
 
-		if len(nodeGroupIdentifier) > 0 {
-			ng = s.Groups[nodeGroupIdentifier]
+	if len(nodeGroupIdentifier) > 0 {
+		ng = s.Groups[nodeGroupIdentifier]
 
-			if ng == nil {
-				systemLabels := types.KubernetesLabel{}
-				labels := types.KubernetesLabel{}
+		if ng == nil {
+			systemLabels := types.KubernetesLabel{}
+			labels := types.KubernetesLabel{}
 
-				// Default labels
-				if nodeGroupDef.GetLabels() != nil {
-					for k, v := range nodeGroupDef.GetLabels() {
-						labels[k] = v
-					}
+			// Default labels
+			if nodeGroupDef.GetLabels() != nil {
+				for k, v := range nodeGroupDef.GetLabels() {
+					labels[k] = v
 				}
-
-				glog.Infof("Auto provision for nodegroup:%s, minSize:%d, maxSize:%d", nodeGroupIdentifier, nodeGroupDef.MinSize, nodeGroupDef.MaxSize)
-
-				if _, err = s.newNodeGroup(nodeGroupIdentifier, nodeGroupDef.MinSize, nodeGroupDef.MaxSize, s.configuration.DefaultMachineType, labels, systemLabels, true); err != nil {
-					break
-				}
-
-				if ng, err = s.createNodeGroup(nodeGroupIdentifier); err != nil {
-					break
-				}
-
-				if formerNodes, err = ng.autoDiscoveryNodes(s.kubeClient, nodeGroupDef.GetIncludeExistingNode()); err != nil {
-					break
-				}
-
-				// If the nodegroup already exists, reparse nodes
-			} else if formerNodes, err = ng.autoDiscoveryNodes(s.kubeClient, nodeGroupDef.GetIncludeExistingNode()); err != nil {
-				break
 			}
 
-			// Drop VM if kubernetes nodes removed
-			ng.findManagedNodeDeleted(s.kubeClient, formerNodes)
+			glog.Infof("Auto provision for nodegroup:%s, minSize:%d, maxSize:%d", nodeGroupIdentifier, nodeGroupDef.MinSize, nodeGroupDef.MaxSize)
+
+			if _, err = s.newNodeGroup(nodeGroupIdentifier, nodeGroupDef.MinSize, nodeGroupDef.MaxSize, s.configuration.DefaultMachineType, labels, systemLabels, true); err != nil {
+				return err
+			}
+
+			if ng, err = s.createNodeGroup(nodeGroupIdentifier); err != nil {
+				return err
+			}
+
+			if formerNodes, err = ng.autoDiscoveryNodes(s.kubeClient, nodeGroupDef.GetIncludeExistingNode()); err != nil {
+				return err
+			}
+
+			// If the nodegroup already exists, reparse nodes
+		} else if formerNodes, err = ng.autoDiscoveryNodes(s.kubeClient, nodeGroupDef.GetIncludeExistingNode()); err != nil {
+			return err
 		}
+
+		// Drop VM if kubernetes nodes removed
+		ng.findManagedNodeDeleted(s.kubeClient, formerNodes)
 	}
 
 	return err
@@ -245,7 +245,7 @@ func (s *AutoScalerServerApp) Connect(ctx context.Context, request *apigrpc.Conn
 		}
 	}
 
-	s.NodesDefinition = request.GetNodes()
+	s.NodesDefinition = request.GetNodes()[0]
 	s.AutoProvision = request.GetAutoProvisionned()
 
 	if s.AutoProvision {
@@ -1063,7 +1063,7 @@ func (s *AutoScalerServerApp) Nodes(ctx context.Context, request *apigrpc.NodeGr
 
 	for _, node := range nodeGroup.AllNodes() {
 		instances = append(instances, &apigrpc.Instance{
-			Id: node.generateProviderID(),
+			Id: node.VMUUID,
 			Status: &apigrpc.InstanceStatus{
 				State:     apigrpc.InstanceState(node.State),
 				ErrorInfo: nil,
@@ -1600,6 +1600,7 @@ func (s *AutoScalerServerApp) checkEtcdSslReadable() bool {
 func StartServer(kubeClient types.ClientGenerator, c *types.Config) {
 	var config types.AutoScalerServerConfig
 	var autoScalerServer *AutoScalerServerApp
+	var apiclient api.VMWareDesktopAutoscalerServiceClient
 
 	saveState := c.SaveLocation
 	configFileName := c.Config
@@ -1615,8 +1616,8 @@ func StartServer(kubeClient types.ClientGenerator, c *types.Config) {
 	}
 
 	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&config)
-	if err != nil {
+
+	if err = decoder.Decode(&config); err != nil {
 		glog.Fatalf("failed to decode config file:%s, error:%v", configFileName, err)
 	}
 
@@ -1667,7 +1668,12 @@ func StartServer(kubeClient types.ClientGenerator, c *types.Config) {
 		config.KubernetesPKIDestDir = c.KubernetesPKIDestDir
 	}
 
+	if apiclient, err = config.VMwareInfos.ApiConfig.GetClient(); err != nil {
+		glog.Fatalf("could not connect to vmware-desktop-autoscaler-utility, error:%v", err)
+	}
+
 	config.ManagedNodeResourceLimiter = c.GetManagedNodeResourceLimiter()
+	config.VMwareInfos.DesktopConfig.SetClient(apiclient)
 
 	if !phSaveState || !utils.FileExists(phSavedState) {
 		autoScalerServer = &AutoScalerServerApp{

@@ -21,11 +21,11 @@ import (
 
 const (
 	testServiceIdentifier = "vmware"
-	testGroupID           = "vmware-ca-k8s"
+	testGroupID           = "desktop-ca-k8s"
 	testNodeName          = "DC0_H0_VM0"
 	testVMUUID            = "265104de-1472-547c-b873-6dc7883fb6cb"
 	testCRDUID            = "96cb1c71-1d2e-4c55-809f-72e874fc4b2c"
-	launchVMName          = "vmware-ca-k8s-autoscaled-01"
+	launchVMName          = "desktop-ca-k8s-autoscaled-01"
 )
 
 type autoScalerServerAppTest struct {
@@ -377,7 +377,7 @@ func (m *serverTest) Nodes() {
 	s, err := m.newTestServer(true, true)
 
 	expected := []string{
-		fmt.Sprintf("vsphere://%s", testVMUUID),
+		fmt.Sprintf("uuid://%s", testVMUUID),
 	}
 
 	if assert.NoError(m.t, err) {

@@ -1,4 +1,4 @@
-name: build-vsphere-autoscaler
+name: build-vmware-desktop-autoscaler
 on:
   push:
     branches:

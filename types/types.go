@@ -7,8 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Fred78290/kubernetes-desktop-autoscaler/api"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/constantes"
-	"github.com/Fred78290/kubernetes-desktop-autoscaler/desktop"
+	desktop "github.com/Fred78290/kubernetes-desktop-autoscaler/desktop"
 	apigrpc "github.com/Fred78290/kubernetes-desktop-autoscaler/grpc"
 	"github.com/alecthomas/kingpin"
 	glog "github.com/sirupsen/logrus"
@@ -215,6 +216,11 @@ type NodeGroupAutoscalingOptions struct {
 	ScaleDownUnreadyTime time.Duration `json:"scaleDownUnreadyTime,omitempty"`
 }
 
+type VMWareDesktopConfiguration struct {
+	DesktopConfig *desktop.Configuration `json:"config"`
+	ApiConfig     *api.Configuration     `json:"api"`
+}
+
 // AutoScalerServerConfig is contains configuration
 type AutoScalerServerConfig struct {
 	UseExternalEtdc            *bool                             `json:"use-external-etcd"`
@@ -249,7 +255,7 @@ type AutoScalerServerConfig struct {
 	ManagedNodeResourceLimiter *ResourceLimiter                  `json:"managednodes-limits"`
 	SSH                        *AutoScalerServerSSH              `json:"ssh-infos"`
 	AutoScalingOptions         *NodeGroupAutoscalingOptions      `json:"autoscaling-options,omitempty"`
-	VMwareInfos                map[string]*desktop.Configuration `json:"vmware"`
+	VMwareInfos                VMWareDesktopConfiguration        `json:"vmware"`
 }
 
 func (limits *ResourceLimiter) MergeRequestResourceLimiter(limiter *apigrpc.ResourceLimiter) {
@@ -338,19 +344,9 @@ func (limits *ResourceLimiter) GetMinValue(key string, defaultValue int) int {
 	return defaultValue
 }
 
-// GetVSphereConfiguration returns the vsphere named conf or default
-func (conf *AutoScalerServerConfig) GetVSphereConfiguration(name string) *desktop.Configuration {
-	var vsphere *desktop.Configuration
-
-	if vsphere = conf.VMwareInfos[name]; vsphere == nil {
-		vsphere = conf.VMwareInfos["default"]
-	}
-
-	if vsphere == nil {
-		glog.Fatalf("Unable to find vmware config for name:%s", name)
-	}
-
-	return vsphere
+// GetDesktopConfiguration returns the desktop configuration named conf or default
+func (conf *AutoScalerServerConfig) GetDesktopConfiguration() *desktop.Configuration {
+	return conf.VMwareInfos.DesktopConfig
 }
 
 // NewConfig returns new Config object
@@ -370,7 +366,7 @@ func NewConfig() *Config {
 		MaxGracePeriod:           DefaultMaxGracePeriod,
 		NodeReadyTimeout:         DefaultNodeReadyTimeout,
 		DisplayVersion:           false,
-		Config:                   "/etc/cluster/vmware-cluster-autoscaler.json",
+		Config:                   "/etc/cluster/vmware-desktop-cluster-autoscaler.json",
 		MinCpus:                  2,
 		MinMemory:                1024,
 		MaxCpus:                  24,
@@ -396,7 +392,7 @@ func allLogLevelsAsStrings() []string {
 }
 
 func (cfg *Config) ParseFlags(args []string, version string) error {
-	app := kingpin.New("vmware-autoscaler", "Kubernetes VMWare autoscaler create VM instances at demand for autoscaling.\n\nNote that all flags may be replaced with env vars - `--flag` -> `VMWARE_AUTOSCALER_FLAG=1` or `--flag value` -> `VMWARE_AUTOSCALER_FLAG=value`")
+	app := kingpin.New("vmware-desktop-autoscaler", "Kubernetes VMWare autoscaler create VM instances at demand for autoscaling.\n\nNote that all flags may be replaced with env vars - `--flag` -> `VMWARE_AUTOSCALER_FLAG=1` or `--flag value` -> `VMWARE_AUTOSCALER_FLAG=value`")
 
 	//	app.Version(version)
 	app.HelpFlag.Short('h')
@@ -407,7 +403,7 @@ func (cfg *Config) ParseFlags(args []string, version string) error {
 
 	app.Flag("use-k3s", "Tell we use k3s in place of kubeadm").Default("false").BoolVar(&cfg.UseK3S)
 	app.Flag("use-vanilla-grpc", "Tell we use vanilla autoscaler externalgrpc cloudprovider").Default("false").BoolVar(&cfg.UseVanillaGrpcProvider)
-	app.Flag("use-controller-manager", "Tell we use vsphere controller manager").Default("true").BoolVar(&cfg.UseControllerManager)
+	app.Flag("use-controller-manager", "Tell we use external controller manager").Default("true").BoolVar(&cfg.UseControllerManager)
 
 	// External Etcd
 	app.Flag("use-external-etcd", "Tell we use an external etcd service (overriden by config file if defined)").Default("false").BoolVar(&cfg.UseExternalEtdc)

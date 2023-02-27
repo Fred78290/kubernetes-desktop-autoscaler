@@ -10,24 +10,46 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Fred78290/kubernetes-desktop-autoscaler/context"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/pkg/apis/nodemanager/v1alpha1"
 )
 
+// VMNetDevice declare single interface
+type VNetDevice struct {
+	AddressType            string `json:"addressType,omitempty" yaml:"addressType,omitempty"`
+	BsdName                string `json:"bsdName,omitempty" yaml:"bsdName,omitempty"`
+	ConnectionType         string `json:"connectionType,omitempty" yaml:"connectionType,omitempty"`
+	DisplayName            string `json:"displayName,omitempty" yaml:"displayName,omitempty"`
+	GeneratedAddress       string `json:"generatedAddress,omitempty" yaml:"generatedAddress,omitempty"`
+	GeneratedAddressOffset int32  `json:"generatedAddressOffset,omitempty" yaml:"generatedAddressOffset,omitempty"`
+	LinkStatePropagation   bool   `json:"linkStatePropagation,omitempty" yaml:"linkStatePropagation,omitempty"`
+	PciSlotNumber          int32  `json:"pciSlotNumber,omitempty" yaml:"pciSlotNumber,omitempty"`
+	Present                bool   `json:"present,omitempty" yaml:"present,omitempty"`
+	VirtualDevice          string `json:"virtualDev,omitempty" yaml:"virtualDev,omitempty"`
+	VNet                   string `json:"vnet,omitempty" yaml:"vnet,omitempty"`
+	Address                string `json:"address,omitempty" yaml:"address,omitempty"`
+}
+
+// Status shortened vm status
+type Status struct {
+	Ethernet []VNetDevice
+	Powered  bool
+}
+
 // NetworkInterface declare single interface
 type NetworkInterface struct {
-	Primary     bool                     `json:"primary,omitempty" yaml:"primary,omitempty"`
-	Existing    bool                     `json:"exists,omitempty" yaml:"exists,omitempty"`
-	NetworkName string                   `json:"network,omitempty" yaml:"network,omitempty"`
-	Adapter     string                   `json:"adapter,omitempty" yaml:"adapter,omitempty"`
-	MacAddress  string                   `json:"mac-address,omitempty" yaml:"mac-address,omitempty"`
-	NicName     string                   `json:"nic,omitempty" yaml:"nic,omitempty"`
-	DHCP        bool                     `json:"dhcp,omitempty" yaml:"dhcp,omitempty"`
-	UseRoutes   bool                     `default:"true" json:"use-dhcp-routes,omitempty" yaml:"use-dhcp-routes,omitempty"`
-	IPAddress   string                   `json:"address,omitempty" yaml:"address,omitempty"`
-	Netmask     string                   `json:"netmask,omitempty" yaml:"netmask,omitempty"`
-	Gateway     string                   `json:"gateway,omitempty" yaml:"gateway,omitempty"`
-	Routes      []v1alpha1.NetworkRoutes `json:"routes,omitempty" yaml:"routes,omitempty"`
+	Primary        bool                     `json:"primary,omitempty" yaml:"primary,omitempty"`
+	Existing       bool                     `json:"exists,omitempty" yaml:"exists,omitempty"`
+	ConnectionType string                   `default:"nat" json:"type,omitempty" yaml:"type,omitempty"`
+	VNet           string                   `json:"vnet,omitempty" yaml:"vnet,omitempty"`
+	VirtualDev     string                   `default:"vmxnet3" json:"device,omitempty" yaml:"device,omitempty"`
+	MacAddress     string                   `json:"mac-address,omitempty" yaml:"mac-address,omitempty"`
+	NicName        string                   `json:"nic,omitempty" yaml:"nic,omitempty"`
+	DHCP           bool                     `json:"dhcp,omitempty" yaml:"dhcp,omitempty"`
+	UseRoutes      bool                     `default:"true" json:"use-dhcp-routes,omitempty" yaml:"use-dhcp-routes,omitempty"`
+	IPAddress      string                   `json:"address,omitempty" yaml:"address,omitempty"`
+	Netmask        string                   `json:"netmask,omitempty" yaml:"netmask,omitempty"`
+	Gateway        string                   `json:"gateway,omitempty" yaml:"gateway,omitempty"`
+	Routes         []v1alpha1.NetworkRoutes `json:"routes,omitempty" yaml:"routes,omitempty"`
 }
 
 // NetworkResolv /etc/resolv.conf
@@ -98,6 +120,14 @@ func ToCIDR(address, netmask string) string {
 	netmask = strconv.FormatUint(uint64(addressToInteger(mask.To4())), 2)
 
 	return fmt.Sprintf("%s/%d", address, strings.Count(netmask, "1"))
+}
+
+func (inf *NetworkInterface) Same(connectionType, vnet string) bool {
+	if inf.ConnectionType == "custom" && connectionType == "custom" {
+		return inf.VNet == vnet
+	} else {
+		return inf.ConnectionType == connectionType
+	}
 }
 
 // GetCloudInitNetwork create cloud-init object
@@ -180,19 +210,6 @@ func (net *Network) GetDeclaredExistingInterfaces() []*NetworkInterface {
 	}
 
 	return infs
-}
-
-// Devices return all devices
-func (net *Network) Devices(ctx *context.Context, nodeIndex int) (interface{}, error) {
-	var err error
-
-	for _, n := range net.Interfaces {
-		if !n.Existing {
-			/// TODO
-		}
-	}
-
-	return nil, err
 }
 
 func (net *Network) UpdateMacAddressTable(nodeIndex int) {

@@ -252,8 +252,8 @@ func (g *AutoScalerServerNodeGroup) addManagedNode(crd *v1alpha1.ManagedNode) (*
 	controlPlane := crd.Spec.ControlPlane
 	nodeName, nodeIndex := g.nodeName(g.findNextNodeIndex(true), controlPlane, true)
 
-	// Clone the vsphere config to allow increment IP address
-	if vsphereConfig, err := g.configuration.GetVSphereConfiguration(g.NodeGroupIdentifier).Clone(nodeIndex); err == nil {
+	// Clone the desktop config to allow increment IP address
+	if desktopConfig, err := g.configuration.GetDesktopConfiguration().Clone(nodeIndex); err == nil {
 		g.RunningNodes[nodeIndex] = ServerNodeStateCreating
 
 		resLimit := g.configuration.ManagedNodeResourceLimiter
@@ -280,14 +280,14 @@ func (g *AutoScalerServerNodeGroup) addManagedNode(crd *v1alpha1.ManagedNode) (*
 			ExtraLabels:      CreateLabelOrAnnotation(crd.Spec.Labels),
 			ExtraAnnotations: CreateLabelOrAnnotation(crd.Spec.Annotations),
 			CRDUID:           crd.GetUID(),
-			VSphereConfig:    vsphereConfig,
+			Configuration:    desktopConfig,
 			serverConfig:     g.configuration,
 		}
 
 		// Change network if asked
 		if len(crd.Spec.NetworkManagement) > 0 {
 			for _, network := range crd.Spec.NetworkManagement {
-				if inf := vsphereConfig.FindInterfaceByName(network.NetworkName); inf != nil {
+				if inf := desktopConfig.FindManagedInterface(&network); inf != nil {
 					inf.DHCP = network.DHCP
 					inf.UseRoutes = network.UseRoutes
 					inf.Routes = network.Routes
@@ -337,7 +337,7 @@ func (g *AutoScalerServerNodeGroup) addManagedNode(crd *v1alpha1.ManagedNode) (*
 
 func (g *AutoScalerServerNodeGroup) prepareNodes(c types.ClientGenerator, delta int) ([]*AutoScalerServerNode, error) {
 	tempNodes := make([]*AutoScalerServerNode, 0, delta)
-	config := g.configuration.GetVSphereConfiguration(g.NodeGroupIdentifier)
+	config := g.configuration.GetDesktopConfiguration()
 	annoteMaster := ""
 
 	if g.configuration.UseK3S != nil && *g.configuration.UseK3S {
@@ -352,8 +352,8 @@ func (g *AutoScalerServerNodeGroup) prepareNodes(c types.ClientGenerator, delta 
 	for {
 		nodeName, nodeIndex := g.nodeName(g.findNextNodeIndex(false), false, false)
 
-		// Clone the vsphere config to allow increment IP address
-		if vsphereConfig, err := config.Clone(nodeIndex); err == nil {
+		// Clone the desktop config to allow increment IP address
+		if desktopConfig, err := config.Clone(nodeIndex); err == nil {
 
 			g.RunningNodes[nodeIndex] = ServerNodeStateCreating
 
@@ -375,7 +375,7 @@ func (g *AutoScalerServerNodeGroup) prepareNodes(c types.ClientGenerator, delta 
 				ExtraLabels:      extraLabels,
 				ControlPlaneNode: false,
 				AllowDeployment:  true,
-				VSphereConfig:    vsphereConfig,
+				Configuration:    desktopConfig,
 				serverConfig:     g.configuration,
 			}
 
@@ -710,7 +710,7 @@ func (g *AutoScalerServerNodeGroup) autoDiscoveryNodes(client types.ClientGenera
 						CPU:              int(nodeInfo.Status.Capacity.Cpu().Value()),
 						Memory:           int(nodeInfo.Status.Capacity.Memory().Value() / (1024 * 1024)),
 						Disk:             int(nodeInfo.Status.Capacity.Storage().Value() / (1024 * 1024)),
-						VSphereConfig:    g.configuration.GetVSphereConfiguration(g.NodeGroupIdentifier).Copy(),
+						Configuration:    g.configuration.GetDesktopConfiguration().Copy(),
 						IPAddress:        runningIP,
 						serverConfig:     g.configuration,
 					}
@@ -841,7 +841,7 @@ func (g *AutoScalerServerNodeGroup) getManagedNodePrefix() string {
 
 func (g *AutoScalerServerNodeGroup) nodeName(vmIndex int, controlplane, managed bool) (string, int) {
 	var start int
-	config := g.configuration.GetVSphereConfiguration(g.NodeGroupIdentifier)
+	config := g.configuration.GetDesktopConfiguration()
 
 	if controlplane {
 		start = 2

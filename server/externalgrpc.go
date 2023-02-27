@@ -32,23 +32,15 @@ func NewExternalgrpcServerApp(appServer *AutoScalerServerApp) (*externalgrpcServ
 func (v *externalgrpcServerApp) doAutoProvision() error {
 	if !v.autoProvisionned {
 
-		nodesDefinition := make([]*apigrpc.NodeGroupDef, 0, len(v.appServer.configuration.VMwareInfos))
-
-		for groupIdentifier := range v.appServer.configuration.VMwareInfos {
-			nodegroupDef := &apigrpc.NodeGroupDef{
-				NodeGroupID:         groupIdentifier,
-				MinSize:             int32(v.appServer.configuration.MinNode),
-				MaxSize:             int32(v.appServer.configuration.MaxNode),
-				IncludeExistingNode: true,
-				Labels:              v.appServer.configuration.NodeLabels,
-				Provisionned:        true,
-			}
-
-			nodesDefinition = append(nodesDefinition, nodegroupDef)
-		}
-
-		v.appServer.NodesDefinition = nodesDefinition
 		v.appServer.AutoProvision = true
+		v.appServer.NodesDefinition = &apigrpc.NodeGroupDef{
+			NodeGroupID:         v.appServer.configuration.VMwareInfos.DesktopConfig.NodeGroup,
+			MinSize:             int32(v.appServer.configuration.MinNode),
+			MaxSize:             int32(v.appServer.configuration.MaxNode),
+			IncludeExistingNode: true,
+			Labels:              v.appServer.configuration.NodeLabels,
+			Provisionned:        true,
+		}
 
 		if err := v.appServer.doAutoProvision(); err != nil {
 			glog.Errorf(constantes.ErrUnableToAutoProvisionNodeGroup, err)
@@ -357,7 +349,7 @@ func (v *externalgrpcServerApp) NodeGroupNodes(ctx context.Context, request *ext
 		}
 
 		instances = append(instances, &externalgrpc.Instance{
-			Id: node.generateProviderID(),
+			Id: node.VMUUID,
 			Status: &externalgrpc.InstanceStatus{
 				InstanceState: status,
 			},

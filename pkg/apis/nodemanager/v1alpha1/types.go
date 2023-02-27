@@ -25,19 +25,21 @@ type NetworkRoutes struct {
 
 // ManagedNodeNetwork is a specification for a network ManagedNode resource
 type ManagedNodeNetwork struct {
-	NetworkName string          `json:"network,omitempty"`
-	DHCP        bool            `json:"dhcp,omitempty"`
-	UseRoutes   bool            `default:"true" json:"use-dhcp-routes,omitempty" yaml:"use-dhcp-routes,omitempty"`
-	IPV4Address string          `json:"address,omitempty"`
-	Gateway     string          `json:"gateway,omitempty"`
-	Netmask     string          `json:"netmask,omitempty"`
-	MacAddress  string          `json:"mac-address,omitempty" yaml:"mac-address,omitempty"`
-	Routes      []NetworkRoutes `json:"routes,omitempty" yaml:"routes,omitempty"`
+	VNet           string          `json:"vnet,omitempty"`
+	ConnectionType string          `default:"nat" json:"type,omitempty" yaml:"type,omitempty"`
+	VirtualDev     string          `default:"vmxnet3" json:"device,omitempty" yaml:"device,omitempty"`
+	DHCP           bool            `json:"dhcp,omitempty"`
+	UseRoutes      bool            `default:"true" json:"use-dhcp-routes,omitempty" yaml:"use-dhcp-routes,omitempty"`
+	IPV4Address    string          `json:"address,omitempty"`
+	Gateway        string          `json:"gateway,omitempty"`
+	Netmask        string          `json:"netmask,omitempty"`
+	MacAddress     string          `json:"mac-address,omitempty" yaml:"mac-address,omitempty"`
+	Routes         []NetworkRoutes `json:"routes,omitempty" yaml:"routes,omitempty"`
 }
 
 // ManagedNodeSpec is the spec for a ManagedNode resource
 type ManagedNodeSpec struct {
-	Nodegroup         string               `default:"vmware-ca-k8s" json:"nodegroup,omitempty"`
+	Nodegroup         string               `default:"desktop-ca-k8s" json:"nodegroup,omitempty"`
 	ControlPlane      bool                 `json:"controlPlane,omitempty"`
 	AllowDeployment   bool                 `json:"allowDeployment,omitempty"`
 	VCpus             int                  `default:"2" json:"vcpus"`

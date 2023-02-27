@@ -18,10 +18,10 @@
 # cluster-autoscaler binary.
 
 if [ -z "$LOG_OUTPUT" ]; then
-  LOG_OUTPUT="/var/log/vsphere-autoscaler.log"
+  LOG_OUTPUT="/var/log/vmware-desktop-autoscaler.log"
 fi
 
-./vsphere-autoscaler $@ 1>>$LOG_OUTPUT 2>&1 &
+./vmware-desktop-autoscaler $@ 1>>$LOG_OUTPUT 2>&1 &
 pid="$!"
 trap "kill -15 $pid" 15
 

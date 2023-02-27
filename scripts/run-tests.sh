@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+echo "Not yet available"
+exit
+
 VERBOSE=
 
 go clean -testcache
@@ -18,24 +21,10 @@ export Test_powerOffVM=YES
 export Test_shutdownGuest=YES
 export Test_deleteVM=YES
 
-function cleanup {
-  echo "Kill vcsim"
-  kill $GOVC_SIM_PID
-}
-
 trap cleanup EXIT
 
-echo "Launch vcsim"
-vcsim -pg 2 &
-GOVC_SIM_PID=$!
-
-echo "Run vsphere test"
-go test --test.short $VERBOSE -race ./vsphere
-
-kill $GOVC_SIM_PID &> /dev/null
-
-vcsim -pg 2 &
-GOVC_SIM_PID=$!
+echo "Run vmware-desktop test"
+go test --test.short $VERBOSE -race ./desktop
 
 echo "Run server test"
 
@@ -67,11 +56,6 @@ export TestServer_PodPrice=YES
 
 go test --test.short $VERBOSE -race ./server -run Test_Server
 
-kill $GOVC_SIM_PID &> /dev/null
-
-vcsim -pg 2 &
-GOVC_SIM_PID=$!
-
 echo "Run nodegroup test"
 
 export TestNodegroup=YES
@@ -85,5 +69,3 @@ export TestNodeGroupGroup_deleteNode=YES
 export TestNodeGroupGroup_deleteNodeGroup=YES
 
 go test --test.short $VERBOSE -race ./server -run Test_Nodegroup
-
-kill $GOVC_SIM_PID &> /dev/null

@@ -1,9 +1,9 @@
 apiVersion: "nodemanager.aldunelabs.com/v1alpha1"
 kind: "ManagedNode"
 metadata:
-  name: "vmware-ca-k8s-master-02"
+  name: "desktop-ca-k8s-master-02"
 spec:
-  nodegroup: vmware-ca-k8s
+  nodegroup: desktop-ca-k8s
   controlPlane: true
   allowDeployment: false
   vcpus: 4
@@ -17,11 +17,15 @@ spec:
   - sample-annotation.aldunelabs.com=sample
   networks:
     -
-      network: "VM Network"
+      vnet: vmnet4
+      type: custom
+      device: vmxnet3
       address: 10.0.0.21
       netmask: 255.255.255.0
       gateway: 10.0.0.1
     -
-      network: "VM Private"
+      vnet: vmnet2
+      type: custom
+      device: vmxnet3
       address: 192.168.1.21
       netmask: 255.255.255.0

@@ -4,35 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"net/url"
 	"time"
 
+	"github.com/Fred78290/kubernetes-desktop-autoscaler/api"
+	"github.com/Fred78290/kubernetes-desktop-autoscaler/constantes"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/context"
+	"github.com/Fred78290/kubernetes-desktop-autoscaler/pkg/apis/nodemanager/v1alpha1"
 )
 
-// Configuration declares vsphere connection info
+// Configuration declares desktop connection info
 type Configuration struct {
-	URL           string        `json:"url"`
-	UserName      string        `json:"uid"`
-	Password      string        `json:"password"`
-	Insecure      bool          `json:"insecure"`
-	DataCenter    string        `json:"dc"`
-	DataStore     string        `json:"datastore"`
-	Resource      string        `json:"resource-pool"`
-	VMBasePath    string        `json:"vmFolder"`
-	Timeout       time.Duration `json:"timeout"`
-	TemplateName  string        `json:"template-name"`
-	Template      bool          `json:"template"`
-	LinkedClone   bool          `json:"linked"`
-	Customization string        `json:"customization"`
-	Network       *Network      `json:"network"`
-	TestMode      bool          `json:"-"`
-}
-
-// Status shortened vm status
-type Status struct {
-	Interfaces []NetworkInterface
-	Powered    bool
+	//Configuration *api.Configuration `json:"configuration"`
+	NodeGroup    string                                   `json:"nodegroup"`
+	Timeout      time.Duration                            `json:"timeout"`
+	TemplateName string                                   `json:"template-name"`
+	LinkedClone  bool                                     `json:"linked"`
+	Network      *Network                                 `json:"network"`
+	TestMode     bool                                     `json:"-"`
+	apiclient    api.VMWareDesktopAutoscalerServiceClient `json:"-"`
 }
 
 // Copy Make a deep copy from src into dst.
@@ -60,16 +49,12 @@ func Copy(dst interface{}, src interface{}) error {
 	return nil
 }
 
-func (conf *Configuration) getURL() (string, error) {
-	u, err := url.Parse(conf.URL)
+func (conf *Configuration) SetClient(apiclient api.VMWareDesktopAutoscalerServiceClient) {
+	conf.apiclient = apiclient
+}
 
-	if err != nil {
-		return "", err
-	}
-
-	u.User = url.UserPassword(conf.UserName, conf.Password)
-
-	return u.String(), err
+func (conf *Configuration) GetClient() (api.VMWareDesktopAutoscalerServiceClient, error) {
+	return conf.apiclient, nil
 }
 
 // Create a shadow copy
@@ -79,6 +64,7 @@ func (conf *Configuration) Copy() *Configuration {
 	_ = Copy(&dup, conf)
 
 	dup.TestMode = conf.TestMode
+	dup.apiclient = conf.apiclient
 
 	return &dup
 }
@@ -102,13 +88,13 @@ func (conf *Configuration) Clone(nodeIndex int) (*Configuration, error) {
 	return dup, nil
 }
 
-func (conf *Configuration) FindPreferredIPAddress(interfaces []NetworkInterface) string {
+func (conf *Configuration) FindPreferredIPAddress(devices []VNetDevice) string {
 	address := ""
 
-	for _, inf := range interfaces {
-		if declaredInf := conf.FindInterfaceByName(inf.NetworkName); declaredInf != nil {
+	for _, ether := range devices {
+		if declaredInf := conf.FindInterface(&ether); declaredInf != nil {
 			if declaredInf.Primary {
-				return inf.IPAddress
+				return ether.Address
 			}
 		}
 	}
@@ -116,68 +102,173 @@ func (conf *Configuration) FindPreferredIPAddress(interfaces []NetworkInterface)
 	return address
 }
 
-func (conf *Configuration) FindInterfaceByName(networkName string) *NetworkInterface {
+func (conf *Configuration) FindInterface(ether *VNetDevice) *NetworkInterface {
 	if conf.Network != nil {
 		for _, inf := range conf.Network.Interfaces {
-			if inf.NetworkName == networkName {
+			if inf.Same(ether.ConnectionType, ether.VNet) {
 				return inf
 			}
 		}
 	}
+
+	return nil
+}
+
+func (conf *Configuration) FindManagedInterface(managed *v1alpha1.ManagedNodeNetwork) *NetworkInterface {
+	if conf.Network != nil {
+		for _, inf := range conf.Network.Interfaces {
+			if inf.Same(managed.ConnectionType, managed.VNet) {
+				return inf
+			}
+		}
+	}
+
 	return nil
 }
 
 // CreateWithContext will create a named VM not powered
 // memory and disk are in megabytes
-func (conf *Configuration) CreateWithContext(ctx *context.Context, name string, userName, authKey string, cloudInit interface{}, network *Network, annotation string, expandHardDrive bool, memory, cpus, disk, nodeIndex int) (*VirtualMachine, error) {
+// Return vm UUID
+func (conf *Configuration) CreateWithContext(ctx *context.Context, name string, userName, authKey string, cloudInit interface{}, network *Network, expandHardDrive bool, memory, cpus, disk, nodeIndex int) (string, error) {
+	var err error
 
-	return nil, nil
+	request := &api.CreateRequest{
+		Template:     conf.TemplateName,
+		Name:         name,
+		Vcpus:        int32(cpus),
+		Memory:       int64(memory),
+		DiskSizeInMb: int32(disk),
+		Linked:       conf.LinkedClone,
+		Networks:     buildNetworkInterface(conf.Network.Interfaces, nodeIndex),
+	}
+
+	if request.GuestInfos, err = buildCloudInit(name, userName, authKey, cloudInit, network, nodeIndex); err != nil {
+
+		return "", fmt.Errorf(constantes.ErrCloudInitFailCreation, name, err)
+
+	} else if client, err := conf.GetClient(); err != nil {
+		return "", err
+	} else if response, err := client.Create(ctx, request); err != nil {
+		return "", err
+	} else if response.GetError() != nil {
+		return "", api.NewApiError(response.GetError())
+	} else {
+		return response.GetResult().Machine.Uuid, nil
+	}
 }
 
 // Create will create a named VM not powered
 // memory and disk are in megabytes
-func (conf *Configuration) Create(name string, userName, authKey string, cloudInit interface{}, network *Network, annotation string, expandHardDrive bool, memory, cpus, disk, nodeIndex int) (*VirtualMachine, error) {
+func (conf *Configuration) Create(name string, userName, authKey string, cloudInit interface{}, network *Network, expandHardDrive bool, memory, cpus, disk, nodeIndex int) (string, error) {
 	ctx := context.NewContext(conf.Timeout)
 	defer ctx.Cancel()
 
-	return conf.CreateWithContext(ctx, name, userName, authKey, cloudInit, network, annotation, expandHardDrive, memory, cpus, disk, nodeIndex)
+	return conf.CreateWithContext(ctx, name, userName, authKey, cloudInit, network, expandHardDrive, memory, cpus, disk, nodeIndex)
 }
 
-// DeleteWithContext a VM by name
-func (conf *Configuration) DeleteWithContext(ctx *context.Context, name string) error {
-	vm, err := conf.VirtualMachineWithContext(ctx, name)
-
-	if err != nil {
+// DeleteWithContext a VM by UUID
+func (conf *Configuration) DeleteWithContext(ctx *context.Context, vmuuid string) error {
+	if client, err := conf.GetClient(); err != nil {
 		return err
+	} else if response, err := client.Delete(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+		return err
+	} else if response.GetError() != nil {
+		return api.NewApiError(response.GetError())
+	} else {
+		return nil
 	}
-
-	return vm.Delete(ctx)
 }
 
-// Delete a VM by name
-func (conf *Configuration) Delete(name string) error {
+// Delete a VM by vmuuid
+func (conf *Configuration) Delete(vmuuid string) error {
 	ctx := context.NewContext(conf.Timeout)
 	defer ctx.Cancel()
 
-	return conf.DeleteWithContext(ctx, name)
+	return conf.DeleteWithContext(ctx, vmuuid)
 }
 
 // VirtualMachineWithContext  Retrieve VM by name
-func (conf *Configuration) VirtualMachineWithContext(ctx *context.Context, name string) (*VirtualMachine, error) {
-	return nil, nil
+func (conf *Configuration) VirtualMachineByNameWithContext(ctx *context.Context, name string) (*VirtualMachine, error) {
+	if client, err := conf.GetClient(); err != nil {
+		return nil, err
+	} else if response, err := client.VirtualMachineByName(ctx, &api.VirtualMachineRequest{Identifier: name}); err != nil {
+		return nil, err
+	} else if response.GetError() != nil {
+		return nil, api.NewApiError(response.GetError())
+	} else {
+		vm := response.GetResult()
+
+		return &VirtualMachine{
+			Name:   vm.GetName(),
+			Uuid:   vm.GetUuid(),
+			Vmx:    vm.GetVmx(),
+			Vcpus:  vm.GetVcpus(),
+			Memory: vm.GetMemory(),
+		}, nil
+	}
 }
 
-// VirtualMachine  Retrieve VM by name
-func (conf *Configuration) VirtualMachine(name string) (*VirtualMachine, error) {
+// VirtualMachine  Retrieve VM by vmuuid
+func (conf *Configuration) VirtualMachineByName(name string) (*VirtualMachine, error) {
 	ctx := context.NewContext(conf.Timeout)
 	defer ctx.Cancel()
 
-	return conf.VirtualMachineWithContext(ctx, name)
+	return conf.VirtualMachineByNameWithContext(ctx, name)
+}
+
+// VirtualMachineWithContext  Retrieve VM by vmuuid
+func (conf *Configuration) VirtualMachineByUUIDWithContext(ctx *context.Context, vmuuid string) (*VirtualMachine, error) {
+	if client, err := conf.GetClient(); err != nil {
+		return nil, err
+	} else if response, err := client.VirtualMachineByUUID(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+		return nil, err
+	} else if response.GetError() != nil {
+		return nil, api.NewApiError(response.GetError())
+	} else {
+		vm := response.GetResult()
+
+		return &VirtualMachine{
+			Name:   vm.GetName(),
+			Uuid:   vm.GetUuid(),
+			Vmx:    vm.GetVmx(),
+			Vcpus:  vm.GetVcpus(),
+			Memory: vm.GetMemory(),
+		}, nil
+	}
+}
+
+// VirtualMachine  Retrieve VM by vmuuid
+func (conf *Configuration) VirtualMachineByUUID(vmuuid string) (*VirtualMachine, error) {
+	ctx := context.NewContext(conf.Timeout)
+	defer ctx.Cancel()
+
+	return conf.VirtualMachineByUUIDWithContext(ctx, vmuuid)
 }
 
 // VirtualMachineListWithContext return all VM for the current datastore
 func (conf *Configuration) VirtualMachineListWithContext(ctx *context.Context) ([]*VirtualMachine, error) {
-	return nil, nil
+	if client, err := conf.GetClient(); err != nil {
+		return nil, err
+	} else if response, err := client.ListVirtualMachines(ctx, &api.VirtualMachinesRequest{}); err != nil {
+		return nil, err
+	} else if response.GetError() != nil {
+		return nil, api.NewApiError(response.GetError())
+	} else {
+		vms := response.GetResult()
+		result := make([]*VirtualMachine, 0, len(vms.Machines))
+
+		for _, vm := range vms.Machines {
+			result = append(result, &VirtualMachine{
+				Name:   vm.GetName(),
+				Uuid:   vm.GetUuid(),
+				Vmx:    vm.GetVmx(),
+				Vcpus:  vm.GetVcpus(),
+				Memory: vm.GetMemory(),
+			})
+		}
+
+		return result, nil
+	}
 }
 
 // VirtualMachineList return all VM for the current datastore
@@ -188,111 +279,139 @@ func (conf *Configuration) VirtualMachineList() ([]*VirtualMachine, error) {
 	return conf.VirtualMachineListWithContext(ctx)
 }
 
-// WaitForIPWithContext wait ip a VM by name
-func (conf *Configuration) WaitForIPWithContext(ctx *context.Context, name string) (string, error) {
+// UUID get VM UUID by name
+func (conf *Configuration) UUIDWithContext(ctx *context.Context, name string) (string, error) {
+	if vm, err := conf.VirtualMachineByNameWithContext(ctx, name); err != nil {
+		return "", err
+	} else {
+		return vm.Uuid, nil
+	}
+}
+
+// UUID get VM UUID by name
+func (conf *Configuration) UUID(name string) (string, error) {
+	ctx := context.NewContext(conf.Timeout)
+	defer ctx.Cancel()
+
+	return conf.UUIDWithContext(ctx, name)
+}
+
+// WaitForIPWithContext wait ip a VM by vmuuid
+func (conf *Configuration) WaitForIPWithContext(ctx *context.Context, vmuuid string) (string, error) {
 
 	if conf.TestMode {
 		return "127.0.0.1", nil
 	}
 
-	vm, err := conf.VirtualMachineWithContext(ctx, name)
-
-	if err != nil {
+	if client, err := conf.GetClient(); err != nil {
 		return "", err
+	} else if response, err := client.WaitForIP(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+		return "", err
+	} else if response.GetError() != nil {
+		return "", api.NewApiError(response.GetError())
+	} else {
+		return response.GetResult().GetAddress(), nil
 	}
-
-	return vm.WaitForIP(ctx)
 }
 
-// WaitForIP wait ip a VM by name
-func (conf *Configuration) WaitForIP(name string) (string, error) {
+// WaitForIP wait ip a VM by vmuuid
+func (conf *Configuration) WaitForIP(vmuuid string) (string, error) {
 	ctx := context.NewContext(conf.Timeout)
 	defer ctx.Cancel()
 
-	return conf.WaitForIPWithContext(ctx, name)
+	return conf.WaitForIPWithContext(ctx, vmuuid)
 }
 
 // SetAutoStartWithContext set autostart for the VM
-func (conf *Configuration) SetAutoStartWithContext(ctx *context.Context, esxi, name string, startOrder int) error {
-	var err error = nil
-
-	if !conf.TestMode {
-		/// TODO
+func (conf *Configuration) SetAutoStartWithContext(ctx *context.Context, vmuuid string, autostart bool) error {
+	if conf.TestMode {
+		return nil
 	}
 
-	return err
+	if client, err := conf.GetClient(); err != nil {
+		return err
+	} else if response, err := client.SetAutoStart(ctx, &api.AutoStartRequest{Uuid: vmuuid, Autostart: autostart}); err != nil {
+		return err
+	} else if response.GetError() != nil {
+		return api.NewApiError(response.GetError())
+	} else {
+		return nil
+	}
 }
 
-// WaitForToolsRunningWithContext wait vmware tools is running a VM by name
-func (conf *Configuration) WaitForToolsRunningWithContext(ctx *context.Context, name string) (bool, error) {
+// SetAutoStart set autostart for the VM
+func (conf *Configuration) SetAutoStart(vmuuid string, autostart bool) error {
+	ctx := context.NewContext(conf.Timeout)
+	defer ctx.Cancel()
+
+	return conf.SetAutoStartWithContext(ctx, vmuuid, autostart)
+}
+
+// WaitForToolsRunningWithContext wait vmware tools is running a VM by vmuuid
+func (conf *Configuration) WaitForToolsRunningWithContext(ctx *context.Context, vmuuid string) (bool, error) {
 	if conf.TestMode {
 		return true, nil
 	}
 
-	vm, err := conf.VirtualMachineWithContext(ctx, name)
-
-	if err != nil {
+	if client, err := conf.GetClient(); err != nil {
 		return false, err
+	} else if response, err := client.WaitForToolsRunning(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+		return false, err
+	} else if response.GetError() != nil {
+		return false, api.NewApiError(response.GetError())
+	} else {
+		return response.GetResult().GetRunning(), nil
 	}
-
-	return vm.WaitForToolsRunning(ctx)
 }
 
-// SetAutoStart set autostart for the VM
-func (conf *Configuration) SetAutoStart(esxi, name string, startOrder int) error {
+// WaitForToolsRunning wait vmware tools is running a VM by vmuuid
+func (conf *Configuration) WaitForToolsRunning(vmuuid string) (bool, error) {
 	ctx := context.NewContext(conf.Timeout)
 	defer ctx.Cancel()
 
-	return conf.SetAutoStartWithContext(ctx, esxi, name, startOrder)
+	return conf.WaitForToolsRunningWithContext(ctx, vmuuid)
 }
 
-// WaitForToolsRunning wait vmware tools is running a VM by name
-func (conf *Configuration) WaitForToolsRunning(name string) (bool, error) {
+// PowerOnWithContext power on a VM by vmuuid
+func (conf *Configuration) PowerOnWithContext(ctx *context.Context, vmuuid string) error {
+	if conf.TestMode {
+		return nil
+	}
+
+	if client, err := conf.GetClient(); err != nil {
+		return err
+	} else if response, err := client.PowerOn(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+		return err
+	} else if response.GetError() != nil {
+		return api.NewApiError(response.GetError())
+	} else {
+		return nil
+	}
+}
+
+// PowerOn power on a VM by vmuuid
+func (conf *Configuration) PowerOn(vmuuid string) error {
 	ctx := context.NewContext(conf.Timeout)
 	defer ctx.Cancel()
 
-	return conf.WaitForToolsRunningWithContext(ctx, name)
+	return conf.PowerOnWithContext(ctx, vmuuid)
 }
 
-// PowerOnWithContext power on a VM by name
-func (conf *Configuration) PowerOnWithContext(ctx *context.Context, name string) error {
-	vm, err := conf.VirtualMachineWithContext(ctx, name)
-
-	if err != nil {
-		return err
+// PowerOffWithContext power off a VM by vmuuid
+func (conf *Configuration) PowerOffWithContext(ctx *context.Context, vmuuid string) error {
+	if conf.TestMode {
+		return nil
 	}
 
-	return vm.PowerOn(ctx)
-}
-
-// PowerOn power on a VM by name
-func (conf *Configuration) PowerOn(name string) error {
-	ctx := context.NewContext(conf.Timeout)
-	defer ctx.Cancel()
-
-	return conf.PowerOnWithContext(ctx, name)
-}
-
-// PowerOffWithContext power off a VM by name
-func (conf *Configuration) PowerOffWithContext(ctx *context.Context, name string) error {
-	vm, err := conf.VirtualMachineWithContext(ctx, name)
-
-	if err != nil {
+	if client, err := conf.GetClient(); err != nil {
 		return err
-	}
-
-	return vm.PowerOff(ctx)
-}
-
-// ShutdownGuestWithContext power off a VM by name
-func (conf *Configuration) ShutdownGuestWithContext(ctx *context.Context, name string) error {
-	vm, err := conf.VirtualMachineWithContext(ctx, name)
-
-	if err != nil {
+	} else if response, err := client.PowerOff(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
 		return err
+	} else if response.GetError() != nil {
+		return api.NewApiError(response.GetError())
+	} else {
+		return nil
 	}
-
-	return vm.ShutdownGuest(ctx)
 }
 
 // PowerOff power off a VM by name
@@ -303,53 +422,104 @@ func (conf *Configuration) PowerOff(name string) error {
 	return conf.PowerOffWithContext(ctx, name)
 }
 
-// ShutdownGuest power off a VM by name
-func (conf *Configuration) ShutdownGuest(name string) error {
-	ctx := context.NewContext(conf.Timeout)
-	defer ctx.Cancel()
-
-	return conf.ShutdownGuestWithContext(ctx, name)
-}
-
-// StatusWithContext return the current status of VM by name
-func (conf *Configuration) StatusWithContext(ctx *context.Context, name string) (*Status, error) {
-	vm, err := conf.VirtualMachineWithContext(ctx, name)
-
-	if err != nil {
-		return nil, err
+// ShutdownGuestWithContext power off a VM by vmuuid
+func (conf *Configuration) ShutdownGuestWithContext(ctx *context.Context, vmuuid string) error {
+	if conf.TestMode {
+		return nil
 	}
 
-	return vm.Status(ctx)
-}
-
-// Status return the current status of VM by name
-func (conf *Configuration) Status(name string) (*Status, error) {
-	ctx := context.NewContext(conf.Timeout)
-	defer ctx.Cancel()
-
-	return conf.StatusWithContext(ctx, name)
-}
-
-func (conf *Configuration) RetrieveNetworkInfosWithContext(ctx *context.Context, name string, nodeIndex int) error {
-	vm, err := conf.VirtualMachineWithContext(ctx, name)
-
-	if err != nil {
+	if client, err := conf.GetClient(); err != nil {
 		return err
+	} else if response, err := client.ShutdownGuest(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+		return err
+	} else if response.GetError() != nil {
+		return api.NewApiError(response.GetError())
+	} else {
+		return nil
 	}
-
-	return vm.collectNetworkInfos(ctx, conf.Network, nodeIndex)
 }
 
-func (conf *Configuration) RetrieveNetworkInfos(name string, nodeIndex int) error {
+// ShutdownGuest power off a VM by vmuuid
+func (conf *Configuration) ShutdownGuest(vmuuid string) error {
 	ctx := context.NewContext(conf.Timeout)
 	defer ctx.Cancel()
 
-	return conf.RetrieveNetworkInfosWithContext(ctx, name, nodeIndex)
+	return conf.ShutdownGuestWithContext(ctx, vmuuid)
+}
+
+// StatusWithContext return the current status of VM by vmuuid
+func (conf *Configuration) StatusWithContext(ctx *context.Context, vmuuid string) (*Status, error) {
+	if client, err := conf.GetClient(); err != nil {
+		return nil, err
+	} else if response, err := client.Status(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+		return nil, err
+	} else if response.GetError() != nil {
+		return nil, api.NewApiError(response.GetError())
+	} else {
+		ethernet := make([]VNetDevice, 0, len(response.GetResult().GetEthernet()))
+
+		for _, ether := range response.GetResult().GetEthernet() {
+			ethernet = append(ethernet, VNetDevice{
+				AddressType:            ether.AddressType,
+				BsdName:                ether.BsdName,
+				ConnectionType:         ether.ConnectionType,
+				DisplayName:            ether.DisplayName,
+				GeneratedAddress:       ether.GeneratedAddress,
+				GeneratedAddressOffset: ether.GeneratedAddressOffset,
+				Address:                ether.Address,
+				LinkStatePropagation:   ether.LinkStatePropagation,
+				PciSlotNumber:          ether.PciSlotNumber,
+				Present:                ether.Present,
+				VirtualDevice:          ether.VirtualDev,
+				VNet:                   ether.Vnet,
+			})
+		}
+
+		return &Status{
+			Powered:  response.GetResult().GetPowered(),
+			Ethernet: ethernet,
+		}, nil
+	}
+}
+
+// Status return the current status of VM by vmuuid
+func (conf *Configuration) Status(vmuuid string) (*Status, error) {
+	ctx := context.NewContext(conf.Timeout)
+	defer ctx.Cancel()
+
+	return conf.StatusWithContext(ctx, vmuuid)
+}
+
+func (conf *Configuration) RetrieveNetworkInfosWithContext(ctx *context.Context, vmuuid string, nodeIndex int) error {
+	if client, err := conf.GetClient(); err != nil {
+		return err
+	} else if response, err := client.Status(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+		return err
+	} else if response.GetError() != nil {
+		return api.NewApiError(response.GetError())
+	} else {
+		for _, ether := range response.GetResult().GetEthernet() {
+			for _, inf := range conf.Network.Interfaces {
+				if (inf.VNet == ether.Vnet) || (inf.ConnectionType == ether.ConnectionType && inf.ConnectionType != "custom") {
+					inf.AttachMacAddress(ether.GeneratedAddress, nodeIndex)
+				}
+			}
+		}
+
+		return nil
+	}
+}
+
+func (conf *Configuration) RetrieveNetworkInfos(vmuuid string, nodeIndex int) error {
+	ctx := context.NewContext(conf.Timeout)
+	defer ctx.Cancel()
+
+	return conf.RetrieveNetworkInfosWithContext(ctx, vmuuid, nodeIndex)
 }
 
 // ExistsWithContext return the current status of VM by name
 func (conf *Configuration) ExistsWithContext(ctx *context.Context, name string) bool {
-	if _, err := conf.VirtualMachineWithContext(ctx, name); err == nil {
+	if _, err := conf.VirtualMachineByNameWithContext(ctx, name); err == nil {
 		return true
 	}
 

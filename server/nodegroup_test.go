@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/constantes"
+	"github.com/Fred78290/kubernetes-desktop-autoscaler/desktop"
 	managednodeClientset "github.com/Fred78290/kubernetes-desktop-autoscaler/pkg/generated/clientset/versioned"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/types"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/utils"
@@ -49,7 +50,7 @@ func (ng *autoScalerServerNodeGroupTest) createTestNode(nodeName string, desired
 		State:         state,
 		NodeType:      AutoScalerServerNodeAutoscaled,
 		NodeIndex:     1,
-		VSphereConfig: ng.testConfig,
+		Configuration: ng.testConfig,
 		serverConfig:  ng.configuration,
 	}
 
@@ -318,7 +319,7 @@ func (m *baseTest) newTestConfig() (*types.AutoScalerServerConfig, error) {
 		return nil, err
 	} else {
 		if err = json.Unmarshal(configStr, &config); err == nil {
-			m.testConfig = config.GetVSphereConfiguration(testGroupID)
+			m.testConfig = config.GetDesktopConfiguration()
 			m.testConfig.TestMode = true
 			config.SSH.TestMode = true
 		}
@@ -337,8 +338,8 @@ func (m *baseTest) ssh() {
 	}
 }
 
-func findInstanceID(vsphere *desktop.Configuration, nodeName string) string {
-	if vmUUID, err := desktop.UUID(nodeName); err == nil {
+func findInstanceID(config *desktop.Configuration, nodeName string) string {
+	if vmUUID, err := config.UUID(nodeName); err == nil {
 		return vmUUID
 	}
 

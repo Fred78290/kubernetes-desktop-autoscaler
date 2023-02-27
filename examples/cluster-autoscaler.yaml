@@ -52,7 +52,7 @@ rules:
       - endpoints
     resourceNames:
       - cluster-autoscaler
-      - vsphere-autoscaler
+      - vmware-desktop-autoscaler
   - verbs:
       - watch
       - list
@@ -319,7 +319,7 @@ data:
           "echo 1 > /sys/block/sda/device/rescan",
           "growpart /dev/sda 1",
           "resize2fs /dev/sda1",
-          "echo '192.168.1.120 vmware-ca-k8s-masterkube vmware-ca-k8s-masterkube.acme.com' >> /etc/hosts"
+          "echo '192.168.1.120 desktop-ca-k8s-masterkube desktop-ca-k8s-masterkube.acme.com' >> /etc/hosts"
         ]
       },
       "ssh-infos": {
@@ -327,20 +327,12 @@ data:
         "ssh-private-key": "/root/.ssh/id_rsa"
       },
       "vmware": {
-        "vmware-ca-k8s": {
-          "url": "https://administrator@acme.com:mySecret@vsphere.acme.com/sdk",
-          "uid": "administrator@vsphere.acme.com",
-          "password": "mySecret",
-          "insecure": true,
-          "dc": "DC01",
-          "datastore": "datastore1",
-          "resource-pool": "ACME/Resources/FR",
-          "vmFolder": "HOME",
+        "api": {
+        },
+        "config": {
           "timeout": 300,
           "template-name": "jammy-kubernetes-cni-flannel-v1.26.0-containerd-amd64",
-          "template": false,
           "linked": false,
-          "customization": "",
           "network": {
             "domain": "acme.com",
             "dns": {
@@ -355,8 +347,9 @@ data:
               {
                 "primary": false,
                 "exists": true,
-                "network": "VM Network",
-                "adapter": "vmxnet3",
+                "vnet": "vmnet4",
+                "device": "vmxnet3",
+                "type": "custom",
                 "mac-address": "generate",
                 "nic": "eth0",
                 "dhcp": true,
@@ -372,8 +365,7 @@ data:
               {
                 "primary": true,
                 "exists": true,
-                "network": "VM Private",
-                "adapter": "vmxnet3",
+                "type": "nat",
                 "mac-address": "generate",
                 "nic": "eth1",
                 "dhcp": true,
@@ -439,10 +431,10 @@ spec:
             - name: cluster-socket
               mountPath: /var/run/cluster-autoscaler
       containers:
-        - name: vsphere-autoscaler
-          image: fred78290/vsphere-autoscaler:v1.26.0
+        - name: vmware-desktop-autoscaler
+          image: fred78290/vmware-desktop-autoscaler:v1.26.0
           command:
-            - /usr/local/bin/vsphere-autoscaler
+            - /usr/local/bin/vmware-desktop-autoscaler
             - "--no-use-external-etcd"
             - "--src-etcd-ssl-dir=/etc/etcd/ssl"
             - "--dst-etcd-ssl-dir=/etc/etcd/ssl"
@@ -475,7 +467,7 @@ spec:
             - "--stderrthreshold=info"
             - "--cloud-provider=grpc"
             - "--cloud-config=/etc/cluster/grpc-config.json"
-            - "--nodes=0:9:true/vmware-ca-k8s"
+            - "--nodes=0:9:true/desktop-ca-k8s"
             - "--max-nodes-total=9"
             - "--cores-total=0:16"
             - "--memory-total=0:48"

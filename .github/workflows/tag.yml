@@ -1,4 +1,4 @@
-name: deploy-vsphere-autoscaler
+name: deploy-vmware-desktop-autoscaler
 
 on:
   push:
@@ -63,8 +63,8 @@ jobs:
           IMAGE_TAG=${GITHUB_REF#refs/tags/}
           make -e REGISTRY=$REGISTRY -e TAG="${IMAGE_TAG}" container-push-manifest
           sudo chown -R $USER out vendor
-          cp out/linux/amd64/vsphere-autoscaler vsphere-autoscaler-amd64
-          cp out/linux/arm64/vsphere-autoscaler vsphere-autoscaler-arm64
+          cp out/linux/amd64/vmware-desktop-autoscaler vmware-desktop-autoscaler-amd64
+          cp out/linux/arm64/vmware-desktop-autoscaler vmware-desktop-autoscaler-arm64
 
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -72,5 +72,5 @@ jobs:
           tag_name: ${{ steps.prep.outputs.tag }}
           draft: false
           files: |
-            vsphere-autoscaler-amd64
-            vsphere-autoscaler-arm64
+            vmware-desktop-autoscaler-amd64
+            vmware-desktop-autoscaler-arm64
