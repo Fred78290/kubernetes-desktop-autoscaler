@@ -26,10 +26,9 @@ deps:
 build: $(addprefix build-arch-,$(ALL_ARCH))
 
 build-arch-%: deps clean-arch-%
-	$(ENVVAR) GOOS=$(GOOS) GOARCH=$* go build -ldflags="-X main.phVersion=$(TAG) -X main.phBuildDate=$(BUILD_DATE) ${LDFLAGS}" -a -o out/$(GOOS)/$*/vmware-desktop-autoscaler
+	$(ENVVAR) GOOS=$(GOOS) GOARCH=$* go build -buildvcs=false -ldflags="-X main.phVersion=$(TAG) -X main.phBuildDate=$(BUILD_DATE) ${LDFLAGS}" -a -o out/$(GOOS)/$*/vmware-desktop-autoscaler
 
 test-unit: clean build
-	go install github.com/vmware/govmomi/vcsim@v0.30.0
 	bash ./scripts/run-tests.sh
 
 make-image: $(addprefix make-image-arch-,$(ALL_ARCH))
