@@ -31,8 +31,8 @@ type VMWareDesktopAutoscalerServiceClient interface {
 	WaitForIP(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*WaitForIPResponse, error)
 	WaitForToolsRunning(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*WaitForToolsRunningResponse, error)
 	SetAutoStart(ctx context.Context, in *AutoStartRequest, opts ...grpc.CallOption) (*AutoStartResponse, error)
-	VirtualMachineByName(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*VirtualMachineByNameResponse, error)
-	VirtualMachineByUUID(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*VirtualMachineByNameResponse, error)
+	VirtualMachineByName(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*VirtualMachineResponse, error)
+	VirtualMachineByUUID(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*VirtualMachineResponse, error)
 	ListVirtualMachines(ctx context.Context, in *VirtualMachinesRequest, opts ...grpc.CallOption) (*VirtualMachinesResponse, error)
 }
 
@@ -125,8 +125,8 @@ func (c *vMWareDesktopAutoscalerServiceClient) SetAutoStart(ctx context.Context,
 	return out, nil
 }
 
-func (c *vMWareDesktopAutoscalerServiceClient) VirtualMachineByName(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*VirtualMachineByNameResponse, error) {
-	out := new(VirtualMachineByNameResponse)
+func (c *vMWareDesktopAutoscalerServiceClient) VirtualMachineByName(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*VirtualMachineResponse, error) {
+	out := new(VirtualMachineResponse)
 	err := c.cc.Invoke(ctx, "/api.VMWareDesktopAutoscalerService/VirtualMachineByName", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -134,8 +134,8 @@ func (c *vMWareDesktopAutoscalerServiceClient) VirtualMachineByName(ctx context.
 	return out, nil
 }
 
-func (c *vMWareDesktopAutoscalerServiceClient) VirtualMachineByUUID(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*VirtualMachineByNameResponse, error) {
-	out := new(VirtualMachineByNameResponse)
+func (c *vMWareDesktopAutoscalerServiceClient) VirtualMachineByUUID(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*VirtualMachineResponse, error) {
+	out := new(VirtualMachineResponse)
 	err := c.cc.Invoke(ctx, "/api.VMWareDesktopAutoscalerService/VirtualMachineByUUID", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -165,8 +165,8 @@ type VMWareDesktopAutoscalerServiceServer interface {
 	WaitForIP(context.Context, *VirtualMachineRequest) (*WaitForIPResponse, error)
 	WaitForToolsRunning(context.Context, *VirtualMachineRequest) (*WaitForToolsRunningResponse, error)
 	SetAutoStart(context.Context, *AutoStartRequest) (*AutoStartResponse, error)
-	VirtualMachineByName(context.Context, *VirtualMachineRequest) (*VirtualMachineByNameResponse, error)
-	VirtualMachineByUUID(context.Context, *VirtualMachineRequest) (*VirtualMachineByNameResponse, error)
+	VirtualMachineByName(context.Context, *VirtualMachineRequest) (*VirtualMachineResponse, error)
+	VirtualMachineByUUID(context.Context, *VirtualMachineRequest) (*VirtualMachineResponse, error)
 	ListVirtualMachines(context.Context, *VirtualMachinesRequest) (*VirtualMachinesResponse, error)
 	mustEmbedUnimplementedVMWareDesktopAutoscalerServiceServer()
 }
@@ -202,10 +202,10 @@ func (UnimplementedVMWareDesktopAutoscalerServiceServer) WaitForToolsRunning(con
 func (UnimplementedVMWareDesktopAutoscalerServiceServer) SetAutoStart(context.Context, *AutoStartRequest) (*AutoStartResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetAutoStart not implemented")
 }
-func (UnimplementedVMWareDesktopAutoscalerServiceServer) VirtualMachineByName(context.Context, *VirtualMachineRequest) (*VirtualMachineByNameResponse, error) {
+func (UnimplementedVMWareDesktopAutoscalerServiceServer) VirtualMachineByName(context.Context, *VirtualMachineRequest) (*VirtualMachineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VirtualMachineByName not implemented")
 }
-func (UnimplementedVMWareDesktopAutoscalerServiceServer) VirtualMachineByUUID(context.Context, *VirtualMachineRequest) (*VirtualMachineByNameResponse, error) {
+func (UnimplementedVMWareDesktopAutoscalerServiceServer) VirtualMachineByUUID(context.Context, *VirtualMachineRequest) (*VirtualMachineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VirtualMachineByUUID not implemented")
 }
 func (UnimplementedVMWareDesktopAutoscalerServiceServer) ListVirtualMachines(context.Context, *VirtualMachinesRequest) (*VirtualMachinesResponse, error) {
