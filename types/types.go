@@ -57,6 +57,7 @@ type Config struct {
 	Config                   string
 	SaveLocation             string
 	DisplayVersion           bool
+	DebugMode                bool
 	LogFormat                string
 	LogLevel                 string
 	MinCpus                  int64
@@ -256,6 +257,7 @@ type AutoScalerServerConfig struct {
 	SSH                        *AutoScalerServerSSH              `json:"ssh-infos"`
 	AutoScalingOptions         *NodeGroupAutoscalingOptions      `json:"autoscaling-options,omitempty"`
 	VMwareInfos                VMWareDesktopConfiguration        `json:"vmware"`
+	DebugMode                  *bool                             `json:"debug,omitempty"`
 }
 
 func (limits *ResourceLimiter) MergeRequestResourceLimiter(limiter *apigrpc.ResourceLimiter) {
@@ -366,7 +368,7 @@ func NewConfig() *Config {
 		MaxGracePeriod:           DefaultMaxGracePeriod,
 		NodeReadyTimeout:         DefaultNodeReadyTimeout,
 		DisplayVersion:           false,
-		Config:                   "/etc/cluster/vmware-desktop-cluster-autoscaler.json",
+		Config:                   "/etc/cluster/vmware-vmware-cluster-autoscaler.json",
 		MinCpus:                  2,
 		MinMemory:                1024,
 		MaxCpus:                  24,
@@ -404,6 +406,8 @@ func (cfg *Config) ParseFlags(args []string, version string) error {
 	app.Flag("use-k3s", "Tell we use k3s in place of kubeadm").Default("false").BoolVar(&cfg.UseK3S)
 	app.Flag("use-vanilla-grpc", "Tell we use vanilla autoscaler externalgrpc cloudprovider").Default("false").BoolVar(&cfg.UseVanillaGrpcProvider)
 	app.Flag("use-controller-manager", "Tell we use external controller manager").Default("true").BoolVar(&cfg.UseControllerManager)
+
+	app.Flag("debug", "Debug mode").Default("false").BoolVar(&cfg.DebugMode)
 
 	// External Etcd
 	app.Flag("use-external-etcd", "Tell we use an external etcd service (overriden by config file if defined)").Default("false").BoolVar(&cfg.UseExternalEtdc)

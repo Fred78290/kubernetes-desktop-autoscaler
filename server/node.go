@@ -590,5 +590,5 @@ func (vm *AutoScalerServerNode) setServerConfiguration(config *types.AutoScalerS
 }
 
 func (vm *AutoScalerServerNode) retrieveNetworkInfos() error {
-	return vm.Configuration.RetrieveNetworkInfos(vm.NodeName, vm.NodeIndex)
+	return vm.Configuration.RetrieveNetworkInfos(vm.VMUUID, vm.NodeIndex)
 }

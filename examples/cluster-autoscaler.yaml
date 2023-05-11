@@ -233,7 +233,7 @@ data:
       "secret": "vmware",
       "timeout": 300
     }
-  kubernetes-desktop-autoscaler.json: |
+  kubernetes-vmware-autoscaler.json: |
     {
       "use-external-etcd": false,
       "src-etcd-ssl-dir": "/etc/etcd/ssl",
@@ -438,7 +438,7 @@ spec:
             - "--no-use-external-etcd"
             - "--src-etcd-ssl-dir=/etc/etcd/ssl"
             - "--dst-etcd-ssl-dir=/etc/etcd/ssl"
-            - "--config=/etc/cluster/kubernetes-desktop-autoscaler.json"
+            - "--config=/etc/cluster/kubernetes-vmware-autoscaler.json"
             - "--save=/var/run/cluster-autoscaler/vmware-autoscaler-state.json"
             - "--log-level=info"
           resources:

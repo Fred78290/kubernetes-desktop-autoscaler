@@ -17,7 +17,7 @@ type Configuration struct {
 	//Configuration *api.Configuration `json:"configuration"`
 	NodeGroup    string                                   `json:"nodegroup"`
 	Timeout      time.Duration                            `json:"timeout"`
-	TemplateName string                                   `json:"template-name"`
+	TemplateUUID string                                   `json:"template"`
 	LinkedClone  bool                                     `json:"linked"`
 	Network      *Network                                 `json:"network"`
 	TestMode     bool                                     `json:"-"`
@@ -133,7 +133,7 @@ func (conf *Configuration) CreateWithContext(ctx *context.Context, name string, 
 	var err error
 
 	request := &api.CreateRequest{
-		Template:     conf.TemplateName,
+		Template:     conf.TemplateUUID,
 		Name:         name,
 		Vcpus:        int32(cpus),
 		Memory:       int64(memory),
