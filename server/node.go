@@ -547,8 +547,11 @@ func (vm *AutoScalerServerNode) statusVM() (AutoScalerServerNodeState, error) {
 	var status *desktop.Status
 	var err error
 
-	config := vm.Configuration
+	if vm.State == AutoScalerServerNodeStateCreating {
+		return vm.State, nil
+	}
 
+	config := vm.Configuration
 	if status, err = config.Status(vm.VMUUID); err != nil {
 		glog.Errorf(constantes.ErrGetVMInfoFailed, vm.NodeName, err)
 		return AutoScalerServerNodeStateUndefined, err
