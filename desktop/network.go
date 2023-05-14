@@ -42,6 +42,8 @@ type NetworkInterface struct {
 	ConnectionType string                   `default:"nat" json:"type,omitempty" yaml:"type,omitempty"`
 	VNet           string                   `json:"vnet,omitempty" yaml:"vnet,omitempty"`
 	VirtualDev     string                   `default:"vmxnet3" json:"device,omitempty" yaml:"device,omitempty"`
+	BsdName        string                   `json:"bsd-name,omitempty" yaml:"bsd-name,omitempty"`
+	DisplayName    string                   `json:"display-name,omitempty" yaml:"display-name,omitempty"`
 	MacAddress     string                   `json:"mac-address,omitempty" yaml:"mac-address,omitempty"`
 	NicName        string                   `json:"nic,omitempty" yaml:"nic,omitempty"`
 	DHCP           bool                     `json:"dhcp,omitempty" yaml:"dhcp,omitempty"`

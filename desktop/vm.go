@@ -156,10 +156,12 @@ func buildNetworkInterface(interfaces []*NetworkInterface, nodeIndex int) []*api
 
 	for _, inf := range interfaces {
 		result = append(result, &api.NetworkInterface{
-			Macaddress: inf.GetMacAddress(nodeIndex),
-			Vnet:       inf.VNet,
-			Type:       inf.ConnectionType,
-			Device:     inf.VirtualDev,
+			Macaddress:  inf.GetMacAddress(nodeIndex),
+			Vnet:        inf.VNet,
+			Type:        inf.ConnectionType,
+			Device:      inf.VirtualDev,
+			BsdName:     inf.BsdName,
+			DisplayName: inf.DisplayName,
 		})
 	}
 	return result
