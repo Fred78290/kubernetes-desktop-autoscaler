@@ -142,10 +142,8 @@ func (conf *Configuration) CreateWithContext(ctx *context.Context, name string, 
 		Networks:     buildNetworkInterface(conf.Network.Interfaces, nodeIndex),
 	}
 
-	if request.GuestInfos, err = buildCloudInit(name, userName, authKey, cloudInit, network, nodeIndex); err != nil {
-
+	if request.GuestInfos, err = BuildCloudInit(name, userName, authKey, cloudInit, network, nodeIndex); err != nil {
 		return "", fmt.Errorf(constantes.ErrCloudInitFailCreation, name, err)
-
 	} else if client, err := conf.GetClient(); err != nil {
 		return "", err
 	} else if response, err := client.Create(ctx, request); err != nil {

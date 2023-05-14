@@ -97,7 +97,8 @@ func buildVendorData(userName, authKey string) interface{} {
 	}
 }
 
-func buildCloudInit(hostName string, userName, authKey string, cloudInit interface{}, network *Network, nodeIndex int) (GuestInfos, error) {
+// BuildCloudInit build map for guestinfo
+func BuildCloudInit(hostName string, userName, authKey string, cloudInit interface{}, network *Network, nodeIndex int) (GuestInfos, error) {
 	var metadata, userdata, vendordata string
 	var err error
 	var guestInfos GuestInfos
