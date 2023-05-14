@@ -152,7 +152,7 @@ func BuildCloudInit(hostName string, userName, authKey string, cloudInit interfa
 	return guestInfos, nil
 }
 
-func buildNetworkInterface(interfaces []*NetworkInterface, nodeIndex int) []*api.NetworkInterface {
+func BuildNetworkInterface(interfaces []*NetworkInterface, nodeIndex int) []*api.NetworkInterface {
 	result := make([]*api.NetworkInterface, 0, len(interfaces))
 
 	for _, inf := range interfaces {

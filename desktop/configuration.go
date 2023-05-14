@@ -139,7 +139,7 @@ func (conf *Configuration) CreateWithContext(ctx *context.Context, name string, 
 		Memory:       int64(memory),
 		DiskSizeInMb: int32(disk),
 		Linked:       conf.LinkedClone,
-		Networks:     buildNetworkInterface(conf.Network.Interfaces, nodeIndex),
+		Networks:     BuildNetworkInterface(conf.Network.Interfaces, nodeIndex),
 	}
 
 	if request.GuestInfos, err = BuildCloudInit(name, userName, authKey, cloudInit, network, nodeIndex); err != nil {
