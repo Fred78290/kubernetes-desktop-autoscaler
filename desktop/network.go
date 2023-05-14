@@ -152,7 +152,7 @@ func (net *Network) GetCloudInitNetwork(nodeIndex int) *NetworkDeclare {
 
 				if !n.UseRoutes {
 					dhcpOverrides := map[string]interface{}{
-						"use-routes": "false",
+						"use-routes": false,
 					}
 					ethernet.DHCPOverrides = &dhcpOverrides
 				} else if len(n.Gateway) > 0 {
