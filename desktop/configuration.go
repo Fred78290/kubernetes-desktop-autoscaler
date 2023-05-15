@@ -10,7 +10,6 @@ import (
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/constantes"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/context"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/pkg/apis/nodemanager/v1alpha1"
-	"github.com/Fred78290/kubernetes-desktop-autoscaler/utils"
 )
 
 // Configuration declares desktop connection info
@@ -418,7 +417,7 @@ func (conf *Configuration) WaitForPowerStateWithContenxt(ctx *context.Context, v
 	if client, err := conf.GetClient(); err != nil {
 		return err
 	} else {
-		return utils.PollImmediate(time.Second, conf.Timeout, func() (bool, error) {
+		return context.PollImmediate(time.Second, conf.Timeout, func() (bool, error) {
 			if response, err := client.Status(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
 				return false, err
 			} else if response.GetError() != nil {

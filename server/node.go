@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/constantes"
+	"github.com/Fred78290/kubernetes-desktop-autoscaler/context"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/desktop"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/types"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/utils"
@@ -134,7 +135,7 @@ func (vm *AutoScalerServerNode) recopyKubernetesPKIIfNeeded() error {
 }
 
 func (vm *AutoScalerServerNode) waitForSshReady() error {
-	return utils.PollImmediate(time.Second, time.Duration(vm.serverConfig.SSH.WaitSshReadyInSeconds)*time.Second, func() (done bool, err error) {
+	return context.PollImmediate(time.Second, time.Duration(vm.serverConfig.SSH.WaitSshReadyInSeconds)*time.Second, func() (done bool, err error) {
 		if _, err := utils.Sudo(vm.serverConfig.SSH, vm.IPAddress, vm.Configuration.Timeout, "ls"); err != nil {
 			if strings.HasSuffix(err.Error(), "connection refused") {
 				glog.Warnf("Wait ssh ready for node: %s, address: %s.", vm.NodeName, vm.IPAddress)
@@ -183,7 +184,7 @@ func (vm *AutoScalerServerNode) kubeAdmJoin(c types.ClientGenerator) error {
 	// To be sure, with kubeadm 1.26.1, the kubelet is not correctly restarted
 	time.Sleep(5 * time.Second)
 
-	return utils.PollImmediate(5*time.Second, time.Duration(vm.serverConfig.SSH.WaitSshReadyInSeconds)*time.Second, func() (done bool, err error) {
+	return context.PollImmediate(5*time.Second, time.Duration(vm.serverConfig.SSH.WaitSshReadyInSeconds)*time.Second, func() (done bool, err error) {
 		if node, err := c.GetNode(vm.NodeName); err == nil && node != nil {
 			return true, nil
 		}
@@ -231,7 +232,7 @@ func (vm *AutoScalerServerNode) k3sAgentJoin(c types.ClientGenerator) error {
 		return fmt.Errorf("unable to execute command: %s, output: %s, reason:%v", command, out, err)
 	}
 
-	return utils.PollImmediate(5*time.Second, time.Duration(vm.serverConfig.SSH.WaitSshReadyInSeconds)*time.Second, func() (done bool, err error) {
+	return context.PollImmediate(5*time.Second, time.Duration(vm.serverConfig.SSH.WaitSshReadyInSeconds)*time.Second, func() (done bool, err error) {
 		if node, err := c.GetNode(vm.NodeName); err == nil && node != nil {
 			return true, nil
 		}
