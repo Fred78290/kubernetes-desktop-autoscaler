@@ -328,6 +328,10 @@ func (vm *AutoScalerServerNode) launchVM(c types.ClientGenerator, nodeLabels, sy
 
 		err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
 
+	} else if err = config.WaitForPowerState(vm.VMUUID, true); err != nil {
+
+		err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
+
 	} else if err = config.SetAutoStart(vm.VMUUID, true); err != nil {
 
 		err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
@@ -405,6 +409,10 @@ func (vm *AutoScalerServerNode) startVM(c types.ClientGenerator) error {
 
 			err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
 
+		} else if err = config.WaitForPowerState(vm.VMUUID, true); err != nil {
+
+			err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
+
 		} else if _, err = config.WaitForToolsRunning(vm.VMUUID); err != nil {
 
 			err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
@@ -468,6 +476,8 @@ func (vm *AutoScalerServerNode) stopVM(c types.ClientGenerator) error {
 
 		if err = config.PowerOff(vm.VMUUID); err == nil {
 			vm.State = AutoScalerServerNodeStateStopped
+		} else if err = config.WaitForPowerState(vm.VMUUID, false); err != nil {
+			err = fmt.Errorf(constantes.ErrStopVMFailed, vm.NodeName, err)
 		} else {
 			err = fmt.Errorf(constantes.ErrStopVMFailed, vm.NodeName, err)
 		}
@@ -516,6 +526,8 @@ func (vm *AutoScalerServerNode) deleteVM(c types.ClientGenerator) error {
 				}
 
 				if err = config.PowerOff(vm.VMUUID); err != nil {
+					err = fmt.Errorf(constantes.ErrStopVMFailed, vm.NodeName, err)
+				} else if err = config.WaitForPowerState(vm.VMUUID, false); err != nil {
 					err = fmt.Errorf(constantes.ErrStopVMFailed, vm.NodeName, err)
 				} else {
 					vm.State = AutoScalerServerNodeStateStopped

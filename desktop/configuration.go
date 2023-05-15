@@ -10,6 +10,7 @@ import (
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/constantes"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/context"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/pkg/apis/nodemanager/v1alpha1"
+	"github.com/Fred78290/kubernetes-desktop-autoscaler/utils"
 )
 
 // Configuration declares desktop connection info
@@ -411,6 +412,29 @@ func (conf *Configuration) PowerOffWithContext(ctx *context.Context, vmuuid stri
 	} else {
 		return nil
 	}
+}
+
+func (conf *Configuration) WaitForPowerStateWithContenxt(ctx *context.Context, vmuuid string, wanted bool) error {
+	if client, err := conf.GetClient(); err != nil {
+		return err
+	} else {
+		return utils.PollImmediate(time.Second, conf.Timeout, func() (bool, error) {
+			if response, err := client.Status(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+				return false, err
+			} else if response.GetError() != nil {
+				return false, api.NewApiError(response.GetError())
+			} else {
+				return response.GetResult().GetPowered() == wanted, nil
+			}
+		})
+	}
+}
+
+func (conf *Configuration) WaitForPowerState(vmuuid string, wanted bool) error {
+	ctx := context.NewContext(conf.Timeout)
+	defer ctx.Cancel()
+
+	return conf.WaitForPowerStateWithContenxt(ctx, vmuuid, wanted)
 }
 
 // PowerOff power off a VM by name
