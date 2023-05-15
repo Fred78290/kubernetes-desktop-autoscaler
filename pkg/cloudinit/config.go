@@ -5,6 +5,6 @@ import (
 )
 
 // BuildCloudInit build map for guestinfo
-func BuildCloudInit(hostName string, userName, authKey string, cloudInit interface{}, network *desktop.Network, nodeIndex int) (desktop.GuestInfos, error) {
-	return desktop.BuildCloudInit(hostName, userName, authKey, cloudInit, network, nodeIndex)
+func BuildCloudInit(hostName string, userName, authKey string, cloudInit interface{}, network *desktop.Network, nodeIndex int, allowUpgrade bool) (desktop.GuestInfos, error) {
+	return desktop.BuildCloudInit(hostName, userName, authKey, cloudInit, network, nodeIndex, allowUpgrade)
 }

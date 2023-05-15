@@ -76,12 +76,12 @@ func encodeObject(name string, object interface{}) (string, error) {
 	return result, err
 }
 
-func buildVendorData(userName, authKey string) interface{} {
+func buildVendorData(userName, authKey string, allowUpgrade bool) interface{} {
 	tz, _ := time.Now().Zone()
 
 	return map[string]interface{}{
-		"package_update":  true,
-		"package_upgrade": true,
+		"package_update":  allowUpgrade,
+		"package_upgrade": allowUpgrade,
 		"timezone":        tz,
 		"users": []string{
 			"default",
@@ -98,7 +98,7 @@ func buildVendorData(userName, authKey string) interface{} {
 }
 
 // BuildCloudInit build map for guestinfo
-func BuildCloudInit(hostName string, userName, authKey string, cloudInit interface{}, network *Network, nodeIndex int) (GuestInfos, error) {
+func BuildCloudInit(hostName string, userName, authKey string, cloudInit interface{}, network *Network, nodeIndex int, allowUpgrade bool) (GuestInfos, error) {
 	var metadata, userdata, vendordata string
 	var err error
 	var guestInfos GuestInfos
@@ -132,7 +132,7 @@ func BuildCloudInit(hostName string, userName, authKey string, cloudInit interfa
 		}
 
 		if len(userName) > 0 && len(authKey) > 0 {
-			if vendordata, err = encodeCloudInit("vendordata", buildVendorData(userName, authKey)); err != nil {
+			if vendordata, err = encodeCloudInit("vendordata", buildVendorData(userName, authKey, allowUpgrade)); err != nil {
 				return nil, fmt.Errorf(constantes.ErrUnableToEncodeGuestInfo, "vendordata", err)
 			}
 		} else if vendordata, err = encodeCloudInit("vendordata", map[string]string{}); err != nil {
