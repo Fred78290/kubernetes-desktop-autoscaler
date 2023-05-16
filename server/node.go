@@ -564,6 +564,10 @@ func (vm *AutoScalerServerNode) statusVM() (AutoScalerServerNodeState, error) {
 		return vm.State, nil
 	}
 
+	if vm.VMUUID == "" {
+		return AutoScalerServerNodeStateUndefined, fmt.Errorf(constantes.ErrGetVMInfoFailed, vm.NodeName, "vm identifer is empty")
+	}
+
 	config := vm.Configuration
 	if status, err = config.Status(vm.VMUUID); err != nil {
 		glog.Errorf(constantes.ErrGetVMInfoFailed, vm.NodeName, err)

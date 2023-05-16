@@ -418,12 +418,12 @@ func (conf *Configuration) WaitForPowerStateWithContenxt(ctx *context.Context, v
 		return err
 	} else {
 		return context.PollImmediate(time.Second, conf.Timeout, func() (bool, error) {
-			if response, err := client.Status(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+			if response, err := client.PowerState(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
 				return false, err
 			} else if response.GetError() != nil {
 				return false, api.NewApiError(response.GetError())
 			} else {
-				return response.GetResult().GetPowered() == wanted, nil
+				return response.GetPowered() == wanted, nil
 			}
 		})
 	}

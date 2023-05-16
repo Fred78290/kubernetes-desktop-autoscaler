@@ -26,6 +26,7 @@ type VMWareDesktopAutoscalerServiceClient interface {
 	Delete(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
 	PowerOn(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*PowerOnResponse, error)
 	PowerOff(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*PowerOffResponse, error)
+	PowerState(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*PowerStateResponse, error)
 	ShutdownGuest(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*ShutdownGuestResponse, error)
 	Status(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*StatusResponse, error)
 	WaitForIP(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*WaitForIPResponse, error)
@@ -74,6 +75,15 @@ func (c *vMWareDesktopAutoscalerServiceClient) PowerOn(ctx context.Context, in *
 func (c *vMWareDesktopAutoscalerServiceClient) PowerOff(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*PowerOffResponse, error) {
 	out := new(PowerOffResponse)
 	err := c.cc.Invoke(ctx, "/api.VMWareDesktopAutoscalerService/PowerOff", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vMWareDesktopAutoscalerServiceClient) PowerState(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*PowerStateResponse, error) {
+	out := new(PowerStateResponse)
+	err := c.cc.Invoke(ctx, "/api.VMWareDesktopAutoscalerService/PowerState", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +170,7 @@ type VMWareDesktopAutoscalerServiceServer interface {
 	Delete(context.Context, *VirtualMachineRequest) (*DeleteResponse, error)
 	PowerOn(context.Context, *VirtualMachineRequest) (*PowerOnResponse, error)
 	PowerOff(context.Context, *VirtualMachineRequest) (*PowerOffResponse, error)
+	PowerState(context.Context, *VirtualMachineRequest) (*PowerStateResponse, error)
 	ShutdownGuest(context.Context, *VirtualMachineRequest) (*ShutdownGuestResponse, error)
 	Status(context.Context, *VirtualMachineRequest) (*StatusResponse, error)
 	WaitForIP(context.Context, *VirtualMachineRequest) (*WaitForIPResponse, error)
@@ -186,6 +197,9 @@ func (UnimplementedVMWareDesktopAutoscalerServiceServer) PowerOn(context.Context
 }
 func (UnimplementedVMWareDesktopAutoscalerServiceServer) PowerOff(context.Context, *VirtualMachineRequest) (*PowerOffResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PowerOff not implemented")
+}
+func (UnimplementedVMWareDesktopAutoscalerServiceServer) PowerState(context.Context, *VirtualMachineRequest) (*PowerStateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PowerState not implemented")
 }
 func (UnimplementedVMWareDesktopAutoscalerServiceServer) ShutdownGuest(context.Context, *VirtualMachineRequest) (*ShutdownGuestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShutdownGuest not implemented")
@@ -293,6 +307,24 @@ func _VMWareDesktopAutoscalerService_PowerOff_Handler(srv interface{}, ctx conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(VMWareDesktopAutoscalerServiceServer).PowerOff(ctx, req.(*VirtualMachineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VMWareDesktopAutoscalerService_PowerState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VirtualMachineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VMWareDesktopAutoscalerServiceServer).PowerState(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.VMWareDesktopAutoscalerService/PowerState",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VMWareDesktopAutoscalerServiceServer).PowerState(ctx, req.(*VirtualMachineRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -463,6 +495,10 @@ var VMWareDesktopAutoscalerService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PowerOff",
 			Handler:    _VMWareDesktopAutoscalerService_PowerOff_Handler,
+		},
+		{
+			MethodName: "PowerState",
+			Handler:    _VMWareDesktopAutoscalerService_PowerState_Handler,
 		},
 		{
 			MethodName: "ShutdownGuest",
