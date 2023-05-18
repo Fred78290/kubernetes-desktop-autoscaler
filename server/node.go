@@ -560,10 +560,6 @@ func (vm *AutoScalerServerNode) statusVM() (AutoScalerServerNodeState, error) {
 	var status *desktop.Status
 	var err error
 
-	if vm.State == AutoScalerServerNodeStateCreating {
-		return vm.State, nil
-	}
-
 	if vm.VMUUID == "" {
 		return AutoScalerServerNodeStateUndefined, fmt.Errorf(constantes.ErrGetVMInfoFailed, vm.NodeName, "vm identifer is empty")
 	}
