@@ -76,29 +76,35 @@ func encodeObject(name string, object interface{}) (string, error) {
 	return result, err
 }
 
-func buildVendorData(userName, authKey string, allowUpgrade bool) interface{} {
-	tz, _ := time.Now().Zone()
+func buildVendorData(userName, authKey, tz string, allowUpgrade bool) interface{} {
+	if userName != "" && authKey != "" {
+		return map[string]interface{}{
+			"package_update":  allowUpgrade,
+			"package_upgrade": allowUpgrade,
+			"timezone":        tz,
+			"users": []string{
+				"default",
+			},
+			"ssh_authorized_keys": []string{
+				authKey,
+			},
+			"system_info": map[string]interface{}{
+				"default_user": map[string]string{
+					"name": userName,
+				},
+			},
+		}
+	}
 
 	return map[string]interface{}{
 		"package_update":  allowUpgrade,
 		"package_upgrade": allowUpgrade,
 		"timezone":        tz,
-		"users": []string{
-			"default",
-		},
-		"ssh_authorized_keys": []string{
-			authKey,
-		},
-		"system_info": map[string]interface{}{
-			"default_user": map[string]string{
-				"name": userName,
-			},
-		},
 	}
 }
 
 // BuildCloudInit build map for guestinfo
-func BuildCloudInit(hostName string, userName, authKey string, cloudInit interface{}, network *Network, nodeIndex int, allowUpgrade bool) (GuestInfos, error) {
+func BuildCloudInit(hostName, userName, authKey, tz string, cloudInit interface{}, network *Network, nodeIndex int, allowUpgrade bool) (GuestInfos, error) {
 	var metadata, userdata, vendordata string
 	var err error
 	var guestInfos GuestInfos
@@ -131,11 +137,7 @@ func BuildCloudInit(hostName string, userName, authKey string, cloudInit interfa
 			return nil, fmt.Errorf(constantes.ErrUnableToEncodeGuestInfo, "userdata", err)
 		}
 
-		if len(userName) > 0 && len(authKey) > 0 {
-			if vendordata, err = encodeCloudInit("vendordata", buildVendorData(userName, authKey, allowUpgrade)); err != nil {
-				return nil, fmt.Errorf(constantes.ErrUnableToEncodeGuestInfo, "vendordata", err)
-			}
-		} else if vendordata, err = encodeCloudInit("vendordata", map[string]string{}); err != nil {
+		if vendordata, err = encodeCloudInit("vendordata", buildVendorData(userName, authKey, tz, allowUpgrade)); err != nil {
 			return nil, fmt.Errorf(constantes.ErrUnableToEncodeGuestInfo, "vendordata", err)
 		}
 

@@ -1684,6 +1684,22 @@ func StartServer(kubeClient types.ClientGenerator, c *types.Config) {
 		config.KubernetesPKIDestDir = c.KubernetesPKIDestDir
 	}
 
+	if config.VMwareInfos.ApiConfig == nil {
+		glog.Fatal("api config is not defined")
+	}
+
+	if config.VMwareInfos.DesktopConfig == nil {
+		glog.Fatal("desktop config is not defined")
+	}
+
+	if config.VMwareInfos.DesktopConfig.TimeZone == "" {
+		config.VMwareInfos.DesktopConfig.TimeZone = "UTC"
+	}
+
+	if config.VMwareInfos.DesktopConfig.TemplateUUID == "" {
+		glog.Fatal("any template defined for cloning")
+	}
+
 	if apiclient, err = config.VMwareInfos.ApiConfig.GetClient(); err != nil {
 		glog.Fatalf("could not connect to vmware-desktop-autoscaler-utility, error:%v", err)
 	}

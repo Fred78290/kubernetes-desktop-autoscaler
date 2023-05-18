@@ -321,7 +321,7 @@ func (vm *AutoScalerServerNode) launchVM(c types.ClientGenerator, nodeLabels, sy
 
 		err = fmt.Errorf(constantes.ErrVMNotProvisionnedByMe, vm.NodeName)
 
-	} else if vm.VMUUID, err = config.Create(vm.NodeName, userInfo.GetUserName(), userInfo.GetAuthKeys(), vm.serverConfig.CloudInit, network, true, vm.Memory, vm.CPU, vm.Disk, vm.NodeIndex, config.AllowUpgrade); err != nil {
+	} else if vm.VMUUID, err = config.Create(vm.NodeName, userInfo.GetUserName(), userInfo.GetAuthKeys(), config.TimeZone, vm.serverConfig.CloudInit, network, true, vm.Memory, vm.CPU, vm.Disk, vm.NodeIndex, config.AllowUpgrade); err != nil {
 
 		err = fmt.Errorf(constantes.ErrUnableToLaunchVM, vm.NodeName, err)
 

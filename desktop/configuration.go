@@ -18,6 +18,7 @@ type Configuration struct {
 	NodeGroup    string                                   `json:"nodegroup"`
 	Timeout      time.Duration                            `json:"timeout"`
 	TemplateUUID string                                   `json:"template"`
+	TimeZone     string                                   `json:"time-zone"`
 	LinkedClone  bool                                     `json:"linked"`
 	Network      *Network                                 `json:"network"`
 	AllowUpgrade bool                                     `json:"allow-upgrade"`
@@ -130,7 +131,7 @@ func (conf *Configuration) FindManagedInterface(managed *v1alpha1.ManagedNodeNet
 // CreateWithContext will create a named VM not powered
 // memory and disk are in megabytes
 // Return vm UUID
-func (conf *Configuration) CreateWithContext(ctx *context.Context, name string, userName, authKey string, cloudInit interface{}, network *Network, expandHardDrive bool, memory, cpus, disk, nodeIndex int, allowUpgrade bool) (string, error) {
+func (conf *Configuration) CreateWithContext(ctx *context.Context, name, userName, authKey, tz string, cloudInit interface{}, network *Network, expandHardDrive bool, memory, cpus, disk, nodeIndex int, allowUpgrade bool) (string, error) {
 	var err error
 
 	request := &api.CreateRequest{
@@ -143,7 +144,7 @@ func (conf *Configuration) CreateWithContext(ctx *context.Context, name string, 
 		Networks:     BuildNetworkInterface(conf.Network.Interfaces, nodeIndex),
 	}
 
-	if request.GuestInfos, err = BuildCloudInit(name, userName, authKey, cloudInit, network, nodeIndex, allowUpgrade); err != nil {
+	if request.GuestInfos, err = BuildCloudInit(name, userName, authKey, tz, cloudInit, network, nodeIndex, allowUpgrade); err != nil {
 		return "", fmt.Errorf(constantes.ErrCloudInitFailCreation, name, err)
 	} else if client, err := conf.GetClient(); err != nil {
 		return "", err
@@ -158,11 +159,11 @@ func (conf *Configuration) CreateWithContext(ctx *context.Context, name string, 
 
 // Create will create a named VM not powered
 // memory and disk are in megabytes
-func (conf *Configuration) Create(name string, userName, authKey string, cloudInit interface{}, network *Network, expandHardDrive bool, memory, cpus, disk, nodeIndex int, allowUpgrade bool) (string, error) {
+func (conf *Configuration) Create(name, userName, authKey, tz string, cloudInit interface{}, network *Network, expandHardDrive bool, memory, cpus, disk, nodeIndex int, allowUpgrade bool) (string, error) {
 	ctx := context.NewContext(conf.Timeout)
 	defer ctx.Cancel()
 
-	return conf.CreateWithContext(ctx, name, userName, authKey, cloudInit, network, expandHardDrive, memory, cpus, disk, nodeIndex, allowUpgrade)
+	return conf.CreateWithContext(ctx, name, userName, authKey, tz, cloudInit, network, expandHardDrive, memory, cpus, disk, nodeIndex, allowUpgrade)
 }
 
 // DeleteWithContext a VM by UUID
