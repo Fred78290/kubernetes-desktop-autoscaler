@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"sort"
 	"strings"
@@ -22,8 +21,7 @@ import (
 const (
 	testServiceIdentifier = "vmware"
 	testGroupID           = "desktop-ca-k8s"
-	testNodeName          = "DC0_H0_VM0"
-	testVMUUID            = "265104de-1472-547c-b873-6dc7883fb6cb"
+	testNodeName          = "desktop-ca-k8s-masterkube"
 	testCRDUID            = "96cb1c71-1d2e-4c55-809f-72e874fc4b2c"
 	launchVMName          = "desktop-ca-k8s-autoscaled-01"
 )
@@ -41,7 +39,7 @@ func (s *autoScalerServerAppTest) createFakeNode(nodeName string) apiv1.Node {
 			Annotations: map[string]string{
 				constantes.AnnotationNodeGroupName:        testGroupID,
 				constantes.AnnotationNodeIndex:            "0",
-				constantes.AnnotationInstanceID:           findInstanceID(s.ng.testConfig, nodeName),
+				constantes.AnnotationInstanceID:           s.ng.findInstanceID(nodeName),
 				constantes.AnnotationNodeAutoProvisionned: "true",
 			},
 		},
@@ -377,7 +375,7 @@ func (m *serverTest) Nodes() {
 	s, err := m.newTestServer(true, true)
 
 	expected := []string{
-		fmt.Sprintf("uuid://%s", testVMUUID),
+		s.ng.findInstanceID(testNodeName),
 	}
 
 	if assert.NoError(m.t, err) {

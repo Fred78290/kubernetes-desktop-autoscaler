@@ -1,0 +1,108 @@
+{
+	"uuid": [
+		"FB5B7CAD-29E5-45AA-B53C-0BA45269A9BF",
+		"9C7BFA54-2FEB-49D0-99E2-60634584323F",
+		"DF7D02C2-3CDF-4A3E-9597-DB8CDCA6ED2F",
+		"9472B628-61FA-4B0A-BCBD-718AB26C9272",
+		"1AFFCF43-87EA-496A-8917-E36D73199867",
+		"401699BF-915A-44CC-9C7C-14A0178C339A"
+	],
+	"vm": [
+		{
+			"name": "template",
+			"path": "/Users/Me/Library/Masterkube/template.vmwarevm/template.vmx",
+			"uuid": "FB5B7CAD-29E5-45AA-B53C-0BA45269A9BF",
+			"vcpus": 1,
+			"memory": 1024,
+			"powered": false,
+			"ethernet": [
+				{
+					"addressType": "generated",
+					"connectionType": "nat",
+					"generatedAddress": "00:0c:29:2b:80:60",
+					"generatedAddressOffset": 0,
+					"linkStatePropagation": true,
+					"pciSlotNumber": 160,
+					"present": true,
+					"virtualDev": "e1000e"
+				},
+				{
+					"addressType": "generated",
+					"connectionType": "hostonly",
+					"generatedAddress": "00:0c:29:2b:80:6a",
+					"generatedAddressOffset": 10,
+					"linkStatePropagation": true,
+					"pciSlotNumber": 192,
+					"present": true,
+					"virtualDev": "e1000e"
+				}
+			]
+		},
+		{
+			"name": "desktop-ca-k8s-masterkube",
+			"path": "/Users/Me/Library/Masterkube/desktop-ca-k8s-masterkube.vmwarevm/desktop-ca-k8s-masterkube.vmx",
+			"uuid": "9C7BFA54-2FEB-49D0-99E2-60634584323F",
+			"vcpus": 2,
+			"memory": 4096,
+			"powered": true,
+			"address": "192.168.172.10",
+			"ethernet": [
+				{
+					"addressType": "generated",
+					"connectionType": "nat",
+					"generatedAddress": "00:0c:29:2b:80:60",
+					"generatedAddressOffset": 0,
+					"linkStatePropagation": true,
+					"pciSlotNumber": 160,
+					"present": true,
+					"virtualDev": "e1000e",
+					"address": "192.168.172.10"
+				},
+				{
+					"addressType": "generated",
+					"connectionType": "hostonly",
+					"generatedAddress": "00:0c:29:2b:80:6a",
+					"generatedAddressOffset": 10,
+					"linkStatePropagation": true,
+					"pciSlotNumber": 192,
+					"present": true,
+					"virtualDev": "e1000e",
+					"address": "172.16.251.10"
+				}
+			]
+		},
+		{
+			"name": "desktop-ca-k8s-worker-01",
+			"path": "/Users/Me/Library/Masterkube/desktop-ca-k8s-worker-01.vmwarevm/desktop-ca-k8s-worker-01.vmx",
+			"uuid": "DF7D02C2-3CDF-4A3E-9597-DB8CDCA6ED2F",
+			"vcpus": 2,
+			"memory": 4096,
+			"powered": true,
+			"address": "192.168.172.10",
+			"ethernet": [
+				{
+					"addressType": "generated",
+					"connectionType": "nat",
+					"generatedAddress": "00:0c:29:2b:80:70",
+					"generatedAddressOffset": 0,
+					"linkStatePropagation": true,
+					"pciSlotNumber": 160,
+					"present": true,
+					"virtualDev": "e1000e",
+					"address": "192.168.172.11"
+				},
+				{
+					"addressType": "generated",
+					"connectionType": "hostonly",
+					"generatedAddress": "00:0c:29:2b:80:7a",
+					"generatedAddressOffset": 10,
+					"linkStatePropagation": true,
+					"pciSlotNumber": 192,
+					"present": true,
+					"virtualDev": "e1000e",
+					"address": "172.16.251.11"
+				}
+			]
+		}
+	]
+}

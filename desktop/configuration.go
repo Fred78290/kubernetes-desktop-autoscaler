@@ -22,7 +22,6 @@ type Configuration struct {
 	LinkedClone  bool                                     `json:"linked"`
 	Network      *Network                                 `json:"network"`
 	AllowUpgrade bool                                     `json:"allow-upgrade"`
-	TestMode     bool                                     `json:"-"`
 	apiclient    api.VMWareDesktopAutoscalerServiceClient `json:"-"`
 }
 
@@ -65,7 +64,6 @@ func (conf *Configuration) Copy() *Configuration {
 
 	_ = Copy(&dup, conf)
 
-	dup.TestMode = conf.TestMode
 	dup.apiclient = conf.apiclient
 
 	return &dup
@@ -298,11 +296,6 @@ func (conf *Configuration) UUID(name string) (string, error) {
 
 // WaitForIPWithContext wait ip a VM by vmuuid
 func (conf *Configuration) WaitForIPWithContext(ctx *context.Context, vmuuid string) (string, error) {
-
-	if conf.TestMode {
-		return "127.0.0.1", nil
-	}
-
 	if client, err := conf.GetClient(); err != nil {
 		return "", err
 	} else if response, err := client.WaitForIP(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
@@ -324,10 +317,6 @@ func (conf *Configuration) WaitForIP(vmuuid string) (string, error) {
 
 // SetAutoStartWithContext set autostart for the VM
 func (conf *Configuration) SetAutoStartWithContext(ctx *context.Context, vmuuid string, autostart bool) error {
-	if conf.TestMode {
-		return nil
-	}
-
 	if client, err := conf.GetClient(); err != nil {
 		return err
 	} else if response, err := client.SetAutoStart(ctx, &api.AutoStartRequest{Uuid: vmuuid, Autostart: autostart}); err != nil {
@@ -349,10 +338,6 @@ func (conf *Configuration) SetAutoStart(vmuuid string, autostart bool) error {
 
 // WaitForToolsRunningWithContext wait vmware tools is running a VM by vmuuid
 func (conf *Configuration) WaitForToolsRunningWithContext(ctx *context.Context, vmuuid string) (bool, error) {
-	if conf.TestMode {
-		return true, nil
-	}
-
 	if client, err := conf.GetClient(); err != nil {
 		return false, err
 	} else if response, err := client.WaitForToolsRunning(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
@@ -374,10 +359,6 @@ func (conf *Configuration) WaitForToolsRunning(vmuuid string) (bool, error) {
 
 // PowerOnWithContext power on a VM by vmuuid
 func (conf *Configuration) PowerOnWithContext(ctx *context.Context, vmuuid string) error {
-	if conf.TestMode {
-		return nil
-	}
-
 	if client, err := conf.GetClient(); err != nil {
 		return err
 	} else if response, err := client.PowerOn(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
@@ -399,10 +380,6 @@ func (conf *Configuration) PowerOn(vmuuid string) error {
 
 // PowerOffWithContext power off a VM by vmuuid
 func (conf *Configuration) PowerOffWithContext(ctx *context.Context, vmuuid string) error {
-	if conf.TestMode {
-		return nil
-	}
-
 	if client, err := conf.GetClient(); err != nil {
 		return err
 	} else if response, err := client.PowerOff(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
@@ -447,10 +424,6 @@ func (conf *Configuration) PowerOff(name string) error {
 
 // ShutdownGuestWithContext power off a VM by vmuuid
 func (conf *Configuration) ShutdownGuestWithContext(ctx *context.Context, vmuuid string) error {
-	if conf.TestMode {
-		return nil
-	}
-
 	if client, err := conf.GetClient(); err != nil {
 		return err
 	} else if response, err := client.ShutdownGuest(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {

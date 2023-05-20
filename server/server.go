@@ -1456,13 +1456,10 @@ func (s *AutoScalerServerApp) Load(fileName string) error {
 		glog.Errorf("failed to get client for autoscaler utility, error:%v", err)
 		return err
 	} else {
-		testMode := s.configuration.VMwareInfos.DesktopConfig.TestMode
-
 		for _, ng := range s.Groups {
 			ng.setConfiguration(s.configuration)
 
 			for _, node := range ng.Nodes {
-				node.Configuration.TestMode = testMode
 				node.Configuration.SetClient(client)
 			}
 		}

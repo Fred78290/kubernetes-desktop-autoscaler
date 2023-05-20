@@ -82,7 +82,7 @@
 		"api": {},
 		"config": {
 			"timeout": 300,
-			"template-name": "DC0_H0_VM0",
+			"template-name": "template",
 			"linked": false,
 			"network": {
 				"domain": "sample.com",
