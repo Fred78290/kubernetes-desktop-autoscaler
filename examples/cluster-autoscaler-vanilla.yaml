@@ -317,10 +317,14 @@ data:
       "cloud-init": {
         "package_update": false,
         "package_upgrade": false,
+        "growpart": {
+          "mode": "auto",
+          "devices": [
+            "/"
+          ],
+          "ignore_growroot_disabled": false
+        },
         "runcmd": [
-          "echo 1 > /sys/block/sda/device/rescan",
-          "growpart /dev/sda 1",
-          "resize2fs /dev/sda1",
           "echo '192.168.1.120 desktop-ca-k8s-masterkube desktop-ca-k8s-masterkube.acme.com' >> /etc/hosts"
         ]
       },
@@ -336,6 +340,10 @@ data:
       },
       "vmware": {
         "api": {
+          "address": "tcp:host-running-vmware-desktop:5323",
+          "key": "/etc/ssl/certs/autoscaler-utility/client.key",
+          "cert": "/etc/ssl/certs/autoscaler-utility/client.key",
+          "cacert": "/etc/ssl/certs/autoscaler-utility/ca.crt"
         },
         "config": {
           "timeout": 300,
@@ -432,6 +440,10 @@ spec:
           secret:
             secretName: cluster-autoscaler-grpc-client-cert
             defaultMode: 0400
+        - name: autoscaler-utility-cert
+          secret:
+            secretName: autoscaler-utility-cert
+            defaultMode: 0400
       initContainers:
         - name: cluster-autoscaler-init
           image: busybox
@@ -444,14 +456,14 @@ spec:
               mountPath: /var/run/cluster-autoscaler
       containers:
         - name: vmware-desktop-autoscaler
-          image: fred78290/vmware-desktop-autoscaler:v1.26.0
+          image: fred78290/vmware-desktop-autoscaler:v1.26.4
           command:
             - /usr/local/bin/vmware-desktop-autoscaler
             - "--no-use-external-etcd"
             - "--src-etcd-ssl-dir=/etc/etcd/ssl"
             - "--dst-etcd-ssl-dir=/etc/etcd/ssl"
             - "--config=/etc/cluster/kubernetes-vmware-autoscaler.json"
-            - "--save=/var/run/cluster-autoscaler/vmware-desktop-autoscaler-state.json"
+            - "--save=/var/run/cluster-autoscaler/vmware-autoscaler-state.json"
             - "--log-level=info"
           resources:
             limits:
@@ -473,6 +485,8 @@ spec:
               mountPath: /etc/kubernetes/pki
             - name: cluster-autoscaler-grpc-client-cert
               mountPath: "/etc/ssl/client-cert"
+            - name: autoscaler-utility-cert
+              mountPath: "/etc/ssl/certs/autoscaler-utility"
         - name: cluster-autoscaler
           image: k8s.gcr.io/autoscaling/cluster-autoscaler:v1.26.1
           command:
