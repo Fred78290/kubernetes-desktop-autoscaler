@@ -36,7 +36,8 @@ message VirtualMachine {
 	int32 vcpus = 4;
 	int64 memory = 5;
 	string address = 6;
-	bool powered = 7; 
+	bool powered = 7;
+	string toolsStatus = 8;
 }
 
 message VirtualMachineRequest {
