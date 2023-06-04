@@ -29,8 +29,8 @@ type VMWareDesktopAutoscalerServiceClient interface {
 	PowerState(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*PowerStateResponse, error)
 	ShutdownGuest(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*ShutdownGuestResponse, error)
 	Status(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*StatusResponse, error)
-	WaitForIP(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*WaitForIPResponse, error)
-	WaitForToolsRunning(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*WaitForToolsRunningResponse, error)
+	WaitForIP(ctx context.Context, in *WaitForIPRequest, opts ...grpc.CallOption) (*WaitForIPResponse, error)
+	WaitForToolsRunning(ctx context.Context, in *WaitForToolsRunningRequest, opts ...grpc.CallOption) (*WaitForToolsRunningResponse, error)
 	SetAutoStart(ctx context.Context, in *AutoStartRequest, opts ...grpc.CallOption) (*AutoStartResponse, error)
 	VirtualMachineByName(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*VirtualMachineResponse, error)
 	VirtualMachineByUUID(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*VirtualMachineResponse, error)
@@ -108,7 +108,7 @@ func (c *vMWareDesktopAutoscalerServiceClient) Status(ctx context.Context, in *V
 	return out, nil
 }
 
-func (c *vMWareDesktopAutoscalerServiceClient) WaitForIP(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*WaitForIPResponse, error) {
+func (c *vMWareDesktopAutoscalerServiceClient) WaitForIP(ctx context.Context, in *WaitForIPRequest, opts ...grpc.CallOption) (*WaitForIPResponse, error) {
 	out := new(WaitForIPResponse)
 	err := c.cc.Invoke(ctx, "/api.VMWareDesktopAutoscalerService/WaitForIP", in, out, opts...)
 	if err != nil {
@@ -117,7 +117,7 @@ func (c *vMWareDesktopAutoscalerServiceClient) WaitForIP(ctx context.Context, in
 	return out, nil
 }
 
-func (c *vMWareDesktopAutoscalerServiceClient) WaitForToolsRunning(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*WaitForToolsRunningResponse, error) {
+func (c *vMWareDesktopAutoscalerServiceClient) WaitForToolsRunning(ctx context.Context, in *WaitForToolsRunningRequest, opts ...grpc.CallOption) (*WaitForToolsRunningResponse, error) {
 	out := new(WaitForToolsRunningResponse)
 	err := c.cc.Invoke(ctx, "/api.VMWareDesktopAutoscalerService/WaitForToolsRunning", in, out, opts...)
 	if err != nil {
@@ -173,8 +173,8 @@ type VMWareDesktopAutoscalerServiceServer interface {
 	PowerState(context.Context, *VirtualMachineRequest) (*PowerStateResponse, error)
 	ShutdownGuest(context.Context, *VirtualMachineRequest) (*ShutdownGuestResponse, error)
 	Status(context.Context, *VirtualMachineRequest) (*StatusResponse, error)
-	WaitForIP(context.Context, *VirtualMachineRequest) (*WaitForIPResponse, error)
-	WaitForToolsRunning(context.Context, *VirtualMachineRequest) (*WaitForToolsRunningResponse, error)
+	WaitForIP(context.Context, *WaitForIPRequest) (*WaitForIPResponse, error)
+	WaitForToolsRunning(context.Context, *WaitForToolsRunningRequest) (*WaitForToolsRunningResponse, error)
 	SetAutoStart(context.Context, *AutoStartRequest) (*AutoStartResponse, error)
 	VirtualMachineByName(context.Context, *VirtualMachineRequest) (*VirtualMachineResponse, error)
 	VirtualMachineByUUID(context.Context, *VirtualMachineRequest) (*VirtualMachineResponse, error)
@@ -207,10 +207,10 @@ func (UnimplementedVMWareDesktopAutoscalerServiceServer) ShutdownGuest(context.C
 func (UnimplementedVMWareDesktopAutoscalerServiceServer) Status(context.Context, *VirtualMachineRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Status not implemented")
 }
-func (UnimplementedVMWareDesktopAutoscalerServiceServer) WaitForIP(context.Context, *VirtualMachineRequest) (*WaitForIPResponse, error) {
+func (UnimplementedVMWareDesktopAutoscalerServiceServer) WaitForIP(context.Context, *WaitForIPRequest) (*WaitForIPResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WaitForIP not implemented")
 }
-func (UnimplementedVMWareDesktopAutoscalerServiceServer) WaitForToolsRunning(context.Context, *VirtualMachineRequest) (*WaitForToolsRunningResponse, error) {
+func (UnimplementedVMWareDesktopAutoscalerServiceServer) WaitForToolsRunning(context.Context, *WaitForToolsRunningRequest) (*WaitForToolsRunningResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WaitForToolsRunning not implemented")
 }
 func (UnimplementedVMWareDesktopAutoscalerServiceServer) SetAutoStart(context.Context, *AutoStartRequest) (*AutoStartResponse, error) {
@@ -366,7 +366,7 @@ func _VMWareDesktopAutoscalerService_Status_Handler(srv interface{}, ctx context
 }
 
 func _VMWareDesktopAutoscalerService_WaitForIP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VirtualMachineRequest)
+	in := new(WaitForIPRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -378,13 +378,13 @@ func _VMWareDesktopAutoscalerService_WaitForIP_Handler(srv interface{}, ctx cont
 		FullMethod: "/api.VMWareDesktopAutoscalerService/WaitForIP",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VMWareDesktopAutoscalerServiceServer).WaitForIP(ctx, req.(*VirtualMachineRequest))
+		return srv.(VMWareDesktopAutoscalerServiceServer).WaitForIP(ctx, req.(*WaitForIPRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _VMWareDesktopAutoscalerService_WaitForToolsRunning_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VirtualMachineRequest)
+	in := new(WaitForToolsRunningRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -396,7 +396,7 @@ func _VMWareDesktopAutoscalerService_WaitForToolsRunning_Handler(srv interface{}
 		FullMethod: "/api.VMWareDesktopAutoscalerService/WaitForToolsRunning",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VMWareDesktopAutoscalerServiceServer).WaitForToolsRunning(ctx, req.(*VirtualMachineRequest))
+		return srv.(VMWareDesktopAutoscalerServiceServer).WaitForToolsRunning(ctx, req.(*WaitForToolsRunningRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

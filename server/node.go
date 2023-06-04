@@ -337,11 +337,7 @@ func (vm *AutoScalerServerNode) launchVM(c types.ClientGenerator, nodeLabels, sy
 
 		err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
 
-	} else if _, err = config.WaitForToolsRunning(vm.VMUUID); err != nil {
-
-		err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
-
-	} else if _, err = config.WaitForIP(vm.VMUUID); err != nil {
+	} else if _, err = config.WaitForIP(vm.VMUUID, config.Timeout); err != nil {
 
 		err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
 
@@ -414,11 +410,7 @@ func (vm *AutoScalerServerNode) startVM(c types.ClientGenerator) error {
 
 			err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
 
-		} else if _, err = config.WaitForToolsRunning(vm.VMUUID); err != nil {
-
-			err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
-
-		} else if _, err = config.WaitForIP(vm.VMUUID); err != nil {
+		} else if _, err = config.WaitForIP(vm.VMUUID, config.Timeout); err != nil {
 
 			err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
 
@@ -475,7 +467,7 @@ func (vm *AutoScalerServerNode) stopVM(c types.ClientGenerator) error {
 			glog.Errorf(constantes.ErrCordonNodeReturnError, vm.NodeName, err)
 		}
 
-		if err = config.PowerOff(vm.VMUUID); err == nil {
+		if err = config.PowerOff(vm.VMUUID, "soft"); err == nil {
 			vm.State = AutoScalerServerNodeStateStopped
 		} else if err = config.WaitForPowerState(vm.VMUUID, false); err != nil {
 			err = fmt.Errorf(constantes.ErrStopVMFailed, vm.NodeName, err)
@@ -526,7 +518,7 @@ func (vm *AutoScalerServerNode) deleteVM(c types.ClientGenerator) error {
 					}
 				}
 
-				if err = config.PowerOff(vm.VMUUID); err != nil {
+				if err = config.PowerOff(vm.VMUUID, "soft"); err != nil {
 					err = fmt.Errorf(constantes.ErrStopVMFailed, vm.NodeName, err)
 				} else if err = config.WaitForPowerState(vm.VMUUID, false); err != nil {
 					err = fmt.Errorf(constantes.ErrStopVMFailed, vm.NodeName, err)

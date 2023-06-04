@@ -16,8 +16,8 @@ service VMWareDesktopAutoscalerService {
 	rpc PowerState(VirtualMachineRequest) returns (PowerStateResponse) {}
 	rpc ShutdownGuest(VirtualMachineRequest) returns (ShutdownGuestResponse) {}
 	rpc Status(VirtualMachineRequest) returns (StatusResponse) {}
-	rpc WaitForIP(VirtualMachineRequest) returns (WaitForIPResponse) {}
-	rpc WaitForToolsRunning(VirtualMachineRequest) returns (WaitForToolsRunningResponse) {}
+	rpc WaitForIP(WaitForIPRequest) returns (WaitForIPResponse) {}
+	rpc WaitForToolsRunning(WaitForToolsRunningRequest) returns (WaitForToolsRunningResponse) {}
 	rpc SetAutoStart(AutoStartRequest) returns (AutoStartResponse) {}
 	rpc VirtualMachineByName(VirtualMachineRequest) returns (VirtualMachineResponse) {}
 	rpc VirtualMachineByUUID(VirtualMachineRequest) returns (VirtualMachineResponse) {}
@@ -188,6 +188,11 @@ message StatusResponse {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Wait for IP VM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+message WaitForIPRequest {
+	string identifier = 1;
+	int32 timeoutInSeconds = 2;
+}
+
 message WaitForIPReply {
 	string address = 1;
 }
@@ -202,6 +207,11 @@ message WaitForIPResponse {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Wait for vmware tools running VM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+message WaitForToolsRunningRequest {
+	string identifier = 1;
+	int32 timeoutInSeconds = 2;
+}
+
 message WaitForToolsRunningReply {
 	bool running = 1;
 }

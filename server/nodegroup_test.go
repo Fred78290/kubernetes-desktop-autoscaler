@@ -255,7 +255,7 @@ func (m *MockupAutoscalerUtility) PowerOn(ctx context.Context, in *api.VirtualMa
 	}, nil
 }
 
-func (m *MockupAutoscalerUtility) PowerOff(ctx context.Context, in *api.VirtualMachineRequest, opts ...grpc.CallOption) (*api.PowerOffResponse, error) {
+func (m *MockupAutoscalerUtility) PowerOff(ctx context.Context, in *api.PowerOffRequest, opts ...grpc.CallOption) (*api.PowerOffResponse, error) {
 	if vm, found := m.vmbyuuid[in.Identifier]; !found {
 		return &api.PowerOffResponse{
 			Response: &api.PowerOffResponse_Error{
@@ -377,7 +377,7 @@ func (m *MockupAutoscalerUtility) Status(ctx context.Context, in *api.VirtualMac
 	}
 }
 
-func (m *MockupAutoscalerUtility) WaitForIP(ctx context.Context, in *api.VirtualMachineRequest, opts ...grpc.CallOption) (*api.WaitForIPResponse, error) {
+func (m *MockupAutoscalerUtility) WaitForIP(ctx context.Context, in *api.WaitForIPRequest, opts ...grpc.CallOption) (*api.WaitForIPResponse, error) {
 	if vm, found := m.vmbyuuid[in.Identifier]; !found {
 		return &api.WaitForIPResponse{
 			Response: &api.WaitForIPResponse_Error{
@@ -398,7 +398,7 @@ func (m *MockupAutoscalerUtility) WaitForIP(ctx context.Context, in *api.Virtual
 	}
 }
 
-func (m *MockupAutoscalerUtility) WaitForToolsRunning(ctx context.Context, in *api.VirtualMachineRequest, opts ...grpc.CallOption) (*api.WaitForToolsRunningResponse, error) {
+func (m *MockupAutoscalerUtility) WaitForToolsRunning(ctx context.Context, in *api.WaitForToolsRunningRequest, opts ...grpc.CallOption) (*api.WaitForToolsRunningResponse, error) {
 	if _, found := m.vmbyuuid[in.Identifier]; !found {
 		return &api.WaitForToolsRunningResponse{
 			Response: &api.WaitForToolsRunningResponse_Error{

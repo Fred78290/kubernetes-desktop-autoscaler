@@ -295,10 +295,10 @@ func (conf *Configuration) UUID(name string) (string, error) {
 }
 
 // WaitForIPWithContext wait ip a VM by vmuuid
-func (conf *Configuration) WaitForIPWithContext(ctx *context.Context, vmuuid string) (string, error) {
+func (conf *Configuration) WaitForIPWithContext(ctx *context.Context, vmuuid string, timeout time.Duration) (string, error) {
 	if client, err := conf.GetClient(); err != nil {
 		return "", err
-	} else if response, err := client.WaitForIP(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+	} else if response, err := client.WaitForIP(ctx, &api.WaitForIPRequest{Identifier: vmuuid, TimeoutInSeconds: int32(timeout / time.Second)}); err != nil {
 		return "", err
 	} else if response.GetError() != nil {
 		return "", api.NewApiError(response.GetError())
@@ -308,11 +308,11 @@ func (conf *Configuration) WaitForIPWithContext(ctx *context.Context, vmuuid str
 }
 
 // WaitForIP wait ip a VM by vmuuid
-func (conf *Configuration) WaitForIP(vmuuid string) (string, error) {
+func (conf *Configuration) WaitForIP(vmuuid string, timeout time.Duration) (string, error) {
 	ctx := context.NewContext(conf.Timeout)
 	defer ctx.Cancel()
 
-	return conf.WaitForIPWithContext(ctx, vmuuid)
+	return conf.WaitForIPWithContext(ctx, vmuuid, timeout)
 }
 
 // SetAutoStartWithContext set autostart for the VM
@@ -337,10 +337,10 @@ func (conf *Configuration) SetAutoStart(vmuuid string, autostart bool) error {
 }
 
 // WaitForToolsRunningWithContext wait vmware tools is running a VM by vmuuid
-func (conf *Configuration) WaitForToolsRunningWithContext(ctx *context.Context, vmuuid string) (bool, error) {
+func (conf *Configuration) WaitForToolsRunningWithContext(ctx *context.Context, vmuuid string, timeout time.Duration) (bool, error) {
 	if client, err := conf.GetClient(); err != nil {
 		return false, err
-	} else if response, err := client.WaitForToolsRunning(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+	} else if response, err := client.WaitForToolsRunning(ctx, &api.WaitForToolsRunningRequest{Identifier: vmuuid, TimeoutInSeconds: int32(timeout / time.Second)}); err != nil {
 		return false, err
 	} else if response.GetError() != nil {
 		return false, api.NewApiError(response.GetError())
@@ -350,11 +350,11 @@ func (conf *Configuration) WaitForToolsRunningWithContext(ctx *context.Context, 
 }
 
 // WaitForToolsRunning wait vmware tools is running a VM by vmuuid
-func (conf *Configuration) WaitForToolsRunning(vmuuid string) (bool, error) {
+func (conf *Configuration) WaitForToolsRunning(vmuuid string, timeout time.Duration) (bool, error) {
 	ctx := context.NewContext(conf.Timeout)
 	defer ctx.Cancel()
 
-	return conf.WaitForToolsRunningWithContext(ctx, vmuuid)
+	return conf.WaitForToolsRunningWithContext(ctx, vmuuid, timeout)
 }
 
 // PowerOnWithContext power on a VM by vmuuid
@@ -379,10 +379,10 @@ func (conf *Configuration) PowerOn(vmuuid string) error {
 }
 
 // PowerOffWithContext power off a VM by vmuuid
-func (conf *Configuration) PowerOffWithContext(ctx *context.Context, vmuuid string) error {
+func (conf *Configuration) PowerOffWithContext(ctx *context.Context, vmuuid, mode string) error {
 	if client, err := conf.GetClient(); err != nil {
 		return err
-	} else if response, err := client.PowerOff(ctx, &api.VirtualMachineRequest{Identifier: vmuuid}); err != nil {
+	} else if response, err := client.PowerOff(ctx, &api.PowerOffRequest{Identifier: vmuuid, Mode: mode}); err != nil {
 		return err
 	} else if response.GetError() != nil {
 		return api.NewApiError(response.GetError())
@@ -415,11 +415,11 @@ func (conf *Configuration) WaitForPowerState(vmuuid string, wanted bool) error {
 }
 
 // PowerOff power off a VM by name
-func (conf *Configuration) PowerOff(name string) error {
+func (conf *Configuration) PowerOff(name, mode string) error {
 	ctx := context.NewContext(conf.Timeout)
 	defer ctx.Cancel()
 
-	return conf.PowerOffWithContext(ctx, name)
+	return conf.PowerOffWithContext(ctx, name, mode)
 }
 
 // ShutdownGuestWithContext power off a VM by vmuuid
