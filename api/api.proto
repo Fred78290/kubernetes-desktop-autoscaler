@@ -62,6 +62,7 @@ message CreateRequest {
 	repeated NetworkInterface networks = 6;
     map<string, string> guestInfos = 7;
 	bool linked = 8;
+	bool register = 9;
 }
 
 message CreateReply {
