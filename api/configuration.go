@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"net/url"
 	"os"
 
 	grpc "google.golang.org/grpc"
@@ -27,9 +26,8 @@ func (c *Configuration) GetClient() (VMWareDesktopAutoscalerServiceClient, error
 		var dialOpt grpc.DialOption
 
 		certPool := x509.NewCertPool()
-		if u, err := url.Parse(c.Address); err != nil {
-			return nil, fmt.Errorf("failed to parse address: %v", err)
-		} else if len(c.Cert) == 0 {
+
+		if len(c.Cert) == 0 {
 			dialOpt = grpc.WithTransportCredentials(insecure.NewCredentials())
 		} else if certFile, err := os.ReadFile(c.Cert); err != nil {
 			return nil, fmt.Errorf("could not open Cert configuration file %q: %v", c.Cert, err)
@@ -42,16 +40,8 @@ func (c *Configuration) GetClient() (VMWareDesktopAutoscalerServiceClient, error
 		} else if !certPool.AppendCertsFromPEM(cacertFile) {
 			return nil, fmt.Errorf("failed to parse ca: %v", err)
 		} else {
-			var host string
-
-			if u.Scheme == "unix" {
-				host = "localhost"
-			} else {
-				host = u.Host
-			}
-
 			transportCreds := credentials.NewTLS(&tls.Config{
-				ServerName:   host,
+				ServerName:   "localhost",
 				Certificates: []tls.Certificate{cert},
 				RootCAs:      certPool,
 			})
