@@ -125,7 +125,7 @@ func ToCIDR(address, netmask string) string {
 }
 
 func (inf *NetworkInterface) Same(connectionType, vnet string) bool {
-	if inf.ConnectionType == "custom" && connectionType == "custom" {
+	if (inf.ConnectionType == "custom" && connectionType == "custom") || (inf.ConnectionType == "bridged" && connectionType == "bridged") {
 		return inf.VNet == vnet
 	} else {
 		return inf.ConnectionType == connectionType
