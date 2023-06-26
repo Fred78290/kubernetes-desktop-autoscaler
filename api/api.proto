@@ -259,12 +259,11 @@ message NetworkDevice {
 }
 
 message NetworkRequest {
-	int32 num = 1;
-	repeated NetworkDevice vmnets = 2;
 }
 
 message NetworkReply {
-
+	int32 num = 1;
+	repeated NetworkDevice vmnets = 2;
 }
 
 message NetworkResponse {
