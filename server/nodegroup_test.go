@@ -494,6 +494,60 @@ func (m *MockupAutoscalerUtility) ListVirtualMachines(ctx context.Context, in *a
 	}, nil
 }
 
+func (m *MockupAutoscalerUtility) ListNetwork(ctx context.Context, in *api.NetworkRequest, opts ...grpc.CallOption) (*api.NetworkResponse, error) {
+	return &api.NetworkResponse{
+		Response: &api.NetworkResponse_Result{
+			Result: &api.NetworkReply{
+				Num: 6,
+				Vmnets: []*api.NetworkDevice{
+					{
+						Name:   "vmnet0",
+						Type:   "bridged",
+						Dhcp:   false,
+						Subnet: "",
+						Mask:   "",
+					},
+					{
+						Name:   "vmnet1",
+						Type:   "hostOnly",
+						Dhcp:   true,
+						Subnet: "172.16.251.0",
+						Mask:   "255.255.255.0",
+					},
+					{
+						Name:   "vmnet2",
+						Type:   "bridged",
+						Dhcp:   false,
+						Subnet: "",
+						Mask:   "",
+					},
+					{
+						Name:   "vmnet3",
+						Type:   "bridged",
+						Dhcp:   false,
+						Subnet: "",
+						Mask:   "",
+					},
+					{
+						Name:   "vmnet4",
+						Type:   "bridged",
+						Dhcp:   false,
+						Subnet: "",
+						Mask:   "",
+					},
+					{
+						Name:   "vmnet8",
+						Type:   "nat",
+						Dhcp:   true,
+						Subnet: "192.168.172.0",
+						Mask:   "255.255.255.0",
+					},
+				},
+			},
+		},
+	}, nil
+}
+
 type baseTest struct {
 	mockup     *MockupAutoscalerUtility
 	testConfig *desktop.Configuration
