@@ -54,6 +54,14 @@ type NetworkInterface struct {
 	Routes         []v1alpha1.NetworkRoutes `json:"routes,omitempty" yaml:"routes,omitempty"`
 }
 
+type NetworkDevice struct {
+	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
+	Type   string `json:"type,omitempty" yaml:"type,omitempty"`
+	Dhcp   bool   `json:"dhcp,omitempty" yaml:"dhcp,omitempty"`
+	Subnet string `json:"subnet,omitempty" yaml:"subnet,omitempty"`
+	Mask   string `json:"mask,omitempty" yaml:"mask,omitempty"`
+}
+
 // NetworkResolv /etc/resolv.conf
 type NetworkResolv struct {
 	Search     []string `json:"search,omitempty" yaml:"search,omitempty"`

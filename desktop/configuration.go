@@ -88,6 +88,39 @@ func (conf *Configuration) Clone(nodeIndex int) (*Configuration, error) {
 	return dup, nil
 }
 
+func (conf *Configuration) FindVNetWithContext(ctx *context.Context, name string) (*NetworkDevice, error) {
+	if client, err := conf.GetClient(); err != nil {
+		return nil, err
+	} else if response, err := client.ListNetwork(ctx, &api.NetworkRequest{}); err != nil {
+		return nil, err
+	} else if response.GetError() != nil {
+		return nil, api.NewApiError(response.GetError())
+	} else {
+		vmnets := response.GetResult().Vmnets
+
+		for _, vmnet := range vmnets {
+			if vmnet.Name == name {
+				return &NetworkDevice{
+					Name:   vmnet.Name,
+					Type:   vmnet.Type,
+					Dhcp:   vmnet.Dhcp,
+					Subnet: vmnet.Subnet,
+					Mask:   vmnet.Mask,
+				}, nil
+			}
+		}
+
+		return nil, nil
+	}
+}
+
+func (conf *Configuration) FindVNet(name string) (*NetworkDevice, error) {
+	ctx := context.NewContext(conf.Timeout)
+	defer ctx.Cancel()
+
+	return conf.FindVNetWithContext(ctx, name)
+}
+
 func (conf *Configuration) FindPreferredIPAddress(devices []VNetDevice) string {
 	address := ""
 
