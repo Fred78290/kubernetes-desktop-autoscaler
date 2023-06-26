@@ -266,7 +266,10 @@ func (c *Controller) CreateCRD() error {
 												Schema: &apiextensionv1.JSONSchemaProps{
 													Type: "object",
 													Properties: map[string]apiextensionv1.JSONSchemaProps{
-														"network": {
+														"vnet": {
+															Type: "string",
+														},
+														"device": {
 															Type: "string",
 														},
 														"dhcp": {
