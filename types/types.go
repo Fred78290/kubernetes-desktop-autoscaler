@@ -49,7 +49,6 @@ type Config struct {
 	UseExternalEtdc          bool
 	UseK3S                   bool
 	UseVanillaGrpcProvider   bool
-	UseControllerManager     bool
 	RequestTimeout           time.Duration
 	DeletionTimeout          time.Duration
 	MaxGracePeriod           time.Duration
@@ -227,7 +226,6 @@ type AutoScalerServerConfig struct {
 	UseExternalEtdc            *bool                             `json:"use-external-etcd"`
 	UseK3S                     *bool                             `json:"use-k3s"`
 	UseVanillaGrpcProvider     *bool                             `json:"use-vanilla-grpc"`
-	UseControllerManager       *bool                             `json:"use-controller-manager"`
 	ExtDestinationEtcdSslDir   string                            `default:"/etc/etcd/ssl" json:"dst-etcd-ssl-dir"`
 	ExtSourceEtcdSslDir        string                            `default:"/etc/etcd/ssl" json:"src-etcd-ssl-dir"`
 	KubernetesPKISourceDir     string                            `default:"/etc/kubernetes/pki" json:"kubernetes-pki-srcdir"`
@@ -358,7 +356,6 @@ func NewConfig() *Config {
 		KubeConfig:               "",
 		UseExternalEtdc:          false,
 		UseVanillaGrpcProvider:   false,
-		UseControllerManager:     true,
 		ExtDestinationEtcdSslDir: "/etc/etcd/ssl",
 		ExtSourceEtcdSslDir:      "/etc/etcd/ssl",
 		KubernetesPKISourceDir:   "/etc/kubernetes/pki",
@@ -405,7 +402,6 @@ func (cfg *Config) ParseFlags(args []string, version string) error {
 
 	app.Flag("use-k3s", "Tell we use k3s in place of kubeadm").Default("false").BoolVar(&cfg.UseK3S)
 	app.Flag("use-vanilla-grpc", "Tell we use vanilla autoscaler externalgrpc cloudprovider").Default("false").BoolVar(&cfg.UseVanillaGrpcProvider)
-	app.Flag("use-controller-manager", "Tell we use external controller manager").Default("true").BoolVar(&cfg.UseControllerManager)
 
 	app.Flag("debug", "Debug mode").Default("false").BoolVar(&cfg.DebugMode)
 

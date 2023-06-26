@@ -279,7 +279,7 @@ func (s *AutoScalerServerApp) Name(ctx context.Context, request *apigrpc.CloudPr
 
 // NodeGroups returns all node groups configured for this cloud provider.
 func (s *AutoScalerServerApp) NodeGroups(ctx context.Context, request *apigrpc.CloudProviderServiceRequest) (*apigrpc.NodeGroupsReply, error) {
-	glog.Debugf("Call server NodeGroups: %v", request)
+	glog.Debugf("Call server NodeGroups: %s", request.String())
 
 	if s.isCallDenied(request) {
 		glog.Errorf(constantes.ErrMismatchingProvider)
@@ -1651,10 +1651,6 @@ func StartServer(kubeClient types.ClientGenerator, c *types.Config) {
 
 	if config.DebugMode == nil {
 		config.DebugMode = &c.DebugMode
-	}
-
-	if config.UseControllerManager == nil {
-		config.UseControllerManager = &c.UseControllerManager
 	}
 
 	if config.UseExternalEtdc == nil {
