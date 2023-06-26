@@ -25,16 +25,15 @@ type NetworkRoutes struct {
 
 // ManagedNodeNetwork is a specification for a network ManagedNode resource
 type ManagedNodeNetwork struct {
-	VNet           string          `json:"vnet,omitempty"`
-	ConnectionType string          `default:"nat" json:"type,omitempty" yaml:"type,omitempty"`
-	VirtualDev     string          `default:"vmxnet3" json:"device,omitempty" yaml:"device,omitempty"`
-	DHCP           bool            `json:"dhcp,omitempty"`
-	UseRoutes      bool            `default:"true" json:"use-dhcp-routes,omitempty" yaml:"use-dhcp-routes,omitempty"`
-	IPV4Address    string          `json:"address,omitempty"`
-	Gateway        string          `json:"gateway,omitempty"`
-	Netmask        string          `json:"netmask,omitempty"`
-	MacAddress     string          `json:"mac-address,omitempty" yaml:"mac-address,omitempty"`
-	Routes         []NetworkRoutes `json:"routes,omitempty" yaml:"routes,omitempty"`
+	VNet        string          `json:"vnet,omitempty"`
+	VirtualDev  string          `default:"vmxnet3" json:"device,omitempty" yaml:"device,omitempty"`
+	DHCP        bool            `json:"dhcp,omitempty"`
+	UseRoutes   bool            `default:"true" json:"use-dhcp-routes,omitempty" yaml:"use-dhcp-routes,omitempty"`
+	IPV4Address string          `json:"address,omitempty"`
+	Gateway     string          `json:"gateway,omitempty"`
+	Netmask     string          `json:"netmask,omitempty"`
+	MacAddress  string          `json:"mac-address,omitempty" yaml:"mac-address,omitempty"`
+	Routes      []NetworkRoutes `json:"routes,omitempty" yaml:"routes,omitempty"`
 }
 
 // ManagedNodeSpec is the spec for a ManagedNode resource

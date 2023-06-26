@@ -9,7 +9,6 @@ import (
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/api"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/constantes"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/context"
-	"github.com/Fred78290/kubernetes-desktop-autoscaler/pkg/apis/nodemanager/v1alpha1"
 )
 
 // Configuration declares desktop connection info
@@ -135,10 +134,10 @@ func (conf *Configuration) FindPreferredIPAddress(devices []VNetDevice) string {
 	return address
 }
 
-func (conf *Configuration) FindInterface(ether *VNetDevice) *NetworkInterface {
+func (conf *Configuration) FindVMNet(name string) *NetworkInterface {
 	if conf.Network != nil {
 		for _, inf := range conf.Network.Interfaces {
-			if inf.Same(ether.ConnectionType, ether.VNet) {
+			if name == inf.VNet {
 				return inf
 			}
 		}
@@ -147,10 +146,10 @@ func (conf *Configuration) FindInterface(ether *VNetDevice) *NetworkInterface {
 	return nil
 }
 
-func (conf *Configuration) FindManagedInterface(managed *v1alpha1.ManagedNodeNetwork) *NetworkInterface {
+func (conf *Configuration) FindInterface(ether *VNetDevice) *NetworkInterface {
 	if conf.Network != nil {
 		for _, inf := range conf.Network.Interfaces {
-			if inf.Same(managed.ConnectionType, managed.VNet) {
+			if inf.Same(ether.ConnectionType, ether.VNet) {
 				return inf
 			}
 		}

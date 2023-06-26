@@ -289,7 +289,7 @@ func (g *AutoScalerServerNodeGroup) addManagedNode(crd *v1alpha1.ManagedNode) (*
 		// Change network if asked
 		if len(crd.Spec.NetworkManagement) > 0 {
 			for _, network := range crd.Spec.NetworkManagement {
-				if inf := desktopConfig.FindManagedInterface(&network); inf != nil {
+				if inf := desktopConfig.FindVMNet(network.VNet); inf != nil {
 					inf.DHCP = network.DHCP
 					inf.UseRoutes = network.UseRoutes
 					inf.Routes = network.Routes
