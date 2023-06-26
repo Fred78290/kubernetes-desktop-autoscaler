@@ -203,15 +203,11 @@ func (vm *AutoScalerServerNode) k3sAgentJoin(c types.ClientGenerator) error {
 	kubeAdm := vm.serverConfig.KubeAdm
 	k3s := vm.serverConfig.K3S
 	args := []string{
-		fmt.Sprintf("echo K3S_ARGS='--node-name=%s --server=https://%s --token=%s' > /etc/systemd/system/k3s.service.env", vm.NodeName, kubeAdm.Address, kubeAdm.Token),
+		fmt.Sprintf("echo K3S_ARGS='--kubelet-arg=provider-id=%s --node-name=%s --server=https://%s --token=%s' > /etc/systemd/system/k3s.service.env", vm.generateProviderID(), vm.NodeName, kubeAdm.Address, kubeAdm.Token),
 	}
 
 	if vm.ControlPlaneNode {
-		if vm.serverConfig.UseControllerManager != nil && *vm.serverConfig.UseControllerManager {
-			args = append(args, "echo 'K3S_MODE=server' > /etc/default/k3s", "echo K3S_DISABLE_ARGS='--disable-cloud-controller --disable=servicelb --disable=traefik --disable=metrics-server' > /etc/systemd/system/k3s.disabled.env")
-		} else {
-			args = append(args, "echo 'K3S_MODE=server' > /etc/default/k3s", "echo K3S_DISABLE_ARGS='--disable=servicelb --disable=traefik --disable=metrics-server' > /etc/systemd/system/k3s.disabled.env")
-		}
+		args = append(args, "echo 'K3S_MODE=server' > /etc/default/k3s", "echo K3S_DISABLE_ARGS='--disable=servicelb --disable=traefik --disable=metrics-server' > /etc/systemd/system/k3s.disabled.env")
 
 		if vm.serverConfig.UseExternalEtdc != nil && *vm.serverConfig.UseExternalEtdc {
 			args = append(args, fmt.Sprintf("echo K3S_SERVER_ARGS='--datastore-endpoint=%s --datastore-cafile=%s/ca.pem --datastore-certfile=%s/etcd.pem --datastore-keyfile=%s/etcd-key.pem' > /etc/systemd/system/k3s.server.env", k3s.DatastoreEndpoint, vm.serverConfig.ExtDestinationEtcdSslDir, vm.serverConfig.ExtDestinationEtcdSslDir, vm.serverConfig.ExtDestinationEtcdSslDir))
@@ -364,6 +360,10 @@ func (vm *AutoScalerServerNode) launchVM(c types.ClientGenerator, nodeLabels, sy
 	} else if err = vm.joinCluster(c); err != nil {
 
 		err = fmt.Errorf(constantes.ErrKubeAdmJoinFailed, vm.NodeName, err)
+
+	} else if err = vm.setProviderID(c); err != nil {
+
+		err = fmt.Errorf(constantes.ErrProviderIDNotConfigured, vm.NodeName, err)
 
 	} else if err = vm.waitReady(c); err != nil {
 
@@ -590,6 +590,22 @@ func (vm *AutoScalerServerNode) findInstanceUUID() string {
 	}
 
 	return ""
+}
+
+func (vm *AutoScalerServerNode) setProviderID(c types.ClientGenerator) error {
+	if vm.serverConfig.UseK3S != nil && *vm.serverConfig.UseK3S {
+		return nil
+	}
+
+	return c.SetProviderID(vm.NodeName, vm.generateProviderID())
+}
+
+func (vm *AutoScalerServerNode) generateProviderID() string {
+	if vm.serverConfig.UseK3S != nil && *vm.serverConfig.UseK3S {
+		return fmt.Sprintf("k3s://%s", vm.NodeName)
+	} else {
+		return fmt.Sprintf("desktop://%s", vm.VMUUID)
+	}
 }
 
 func (vm *AutoScalerServerNode) setServerConfiguration(config *types.AutoScalerServerConfig) {

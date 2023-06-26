@@ -56,7 +56,7 @@ func (v *externalgrpcServerApp) doAutoProvision() error {
 
 // NodeGroups returns all node groups configured for this cloud provider.
 func (v *externalgrpcServerApp) NodeGroups(ctx context.Context, request *externalgrpc.NodeGroupsRequest) (*externalgrpc.NodeGroupsResponse, error) {
-	glog.Debugf("Call server NodeGroups: %v", request)
+	glog.Debugf("Call server NodeGroups: %s", request.String())
 
 	nodeGroups := make([]*externalgrpc.NodeGroup, 0, len(v.appServer.Groups))
 
@@ -103,6 +103,8 @@ func (v *externalgrpcServerApp) NodeGroupForNode(ctx context.Context, request *e
 			},
 		}, nil
 	} else {
+		glog.Warnf("Annotation %s not found for node:%s", constantes.AnnotationNodeGroupName, request.Node.Name)
+
 		return &externalgrpc.NodeGroupForNodeResponse{}, nil
 	}
 }
@@ -349,7 +351,7 @@ func (v *externalgrpcServerApp) NodeGroupNodes(ctx context.Context, request *ext
 		}
 
 		instances = append(instances, &externalgrpc.Instance{
-			Id: node.VMUUID,
+			Id: node.generateProviderID(),
 			Status: &externalgrpc.InstanceStatus{
 				InstanceState: status,
 			},

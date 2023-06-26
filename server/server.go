@@ -1063,7 +1063,7 @@ func (s *AutoScalerServerApp) Nodes(ctx context.Context, request *apigrpc.NodeGr
 
 	for _, node := range nodeGroup.AllNodes() {
 		instances = append(instances, &apigrpc.Instance{
-			Id: node.VMUUID,
+			Id: node.generateProviderID(),
 			Status: &apigrpc.InstanceStatus{
 				State:     apigrpc.InstanceState(node.State),
 				ErrorInfo: nil,
