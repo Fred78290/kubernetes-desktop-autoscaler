@@ -35,6 +35,7 @@ type VMWareDesktopAutoscalerServiceClient interface {
 	VirtualMachineByName(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*VirtualMachineResponse, error)
 	VirtualMachineByUUID(ctx context.Context, in *VirtualMachineRequest, opts ...grpc.CallOption) (*VirtualMachineResponse, error)
 	ListVirtualMachines(ctx context.Context, in *VirtualMachinesRequest, opts ...grpc.CallOption) (*VirtualMachinesResponse, error)
+	ListNetwork(ctx context.Context, in *NetworkRequest, opts ...grpc.CallOption) (*NetworkResponse, error)
 }
 
 type vMWareDesktopAutoscalerServiceClient struct {
@@ -162,6 +163,15 @@ func (c *vMWareDesktopAutoscalerServiceClient) ListVirtualMachines(ctx context.C
 	return out, nil
 }
 
+func (c *vMWareDesktopAutoscalerServiceClient) ListNetwork(ctx context.Context, in *NetworkRequest, opts ...grpc.CallOption) (*NetworkResponse, error) {
+	out := new(NetworkResponse)
+	err := c.cc.Invoke(ctx, "/api.VMWareDesktopAutoscalerService/ListNetwork", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VMWareDesktopAutoscalerServiceServer is the server API for VMWareDesktopAutoscalerService service.
 // All implementations must embed UnimplementedVMWareDesktopAutoscalerServiceServer
 // for forward compatibility
@@ -179,6 +189,7 @@ type VMWareDesktopAutoscalerServiceServer interface {
 	VirtualMachineByName(context.Context, *VirtualMachineRequest) (*VirtualMachineResponse, error)
 	VirtualMachineByUUID(context.Context, *VirtualMachineRequest) (*VirtualMachineResponse, error)
 	ListVirtualMachines(context.Context, *VirtualMachinesRequest) (*VirtualMachinesResponse, error)
+	ListNetwork(context.Context, *NetworkRequest) (*NetworkResponse, error)
 	mustEmbedUnimplementedVMWareDesktopAutoscalerServiceServer()
 }
 
@@ -224,6 +235,9 @@ func (UnimplementedVMWareDesktopAutoscalerServiceServer) VirtualMachineByUUID(co
 }
 func (UnimplementedVMWareDesktopAutoscalerServiceServer) ListVirtualMachines(context.Context, *VirtualMachinesRequest) (*VirtualMachinesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListVirtualMachines not implemented")
+}
+func (UnimplementedVMWareDesktopAutoscalerServiceServer) ListNetwork(context.Context, *NetworkRequest) (*NetworkResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListNetwork not implemented")
 }
 func (UnimplementedVMWareDesktopAutoscalerServiceServer) mustEmbedUnimplementedVMWareDesktopAutoscalerServiceServer() {
 }
@@ -473,6 +487,24 @@ func _VMWareDesktopAutoscalerService_ListVirtualMachines_Handler(srv interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VMWareDesktopAutoscalerService_ListNetwork_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NetworkRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VMWareDesktopAutoscalerServiceServer).ListNetwork(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.VMWareDesktopAutoscalerService/ListNetwork",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VMWareDesktopAutoscalerServiceServer).ListNetwork(ctx, req.(*NetworkRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VMWareDesktopAutoscalerService_ServiceDesc is the grpc.ServiceDesc for VMWareDesktopAutoscalerService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -531,6 +563,10 @@ var VMWareDesktopAutoscalerService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListVirtualMachines",
 			Handler:    _VMWareDesktopAutoscalerService_ListVirtualMachines_Handler,
+		},
+		{
+			MethodName: "ListNetwork",
+			Handler:    _VMWareDesktopAutoscalerService_ListNetwork_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

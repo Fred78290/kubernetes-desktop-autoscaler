@@ -22,6 +22,7 @@ service VMWareDesktopAutoscalerService {
 	rpc VirtualMachineByName(VirtualMachineRequest) returns (VirtualMachineResponse) {}
 	rpc VirtualMachineByUUID(VirtualMachineRequest) returns (VirtualMachineResponse) {}
 	rpc ListVirtualMachines(VirtualMachinesRequest) returns (VirtualMachinesResponse) {}
+	rpc ListNetwork(NetworkRequest) returns (NetworkResponse) {}
 }
 
 message ClientError {
@@ -246,5 +247,29 @@ message VirtualMachinesResponse {
 	oneof response {
 		ClientError error = 1;
 		VirtualMachinesReply result = 2;
+	}
+}
+
+message NetworkDevice {
+	string name = 1;
+	string type = 2;
+	bool dhcp = 3;
+	string subnet = 4;
+	string mask = 5;
+}
+
+message NetworkRequest {
+	int32 num = 1;
+	repeated NetworkDevice vmnets = 2;
+}
+
+message NetworkReply {
+
+}
+
+message NetworkResponse {
+	oneof response {
+		ClientError error = 1;
+		NetworkReply result = 2;
 	}
 }
