@@ -107,6 +107,10 @@ type NetworkConfig struct {
 	Network       *NetworkDeclare `json:"network,omitempty" yaml:"network,omitempty"`
 }
 
+func equalIgnoreCase(a, b string) bool {
+	return strings.ToLower(a) == strings.ToLower(b)
+}
+
 // Converts IP mask to 16 bit unsigned integer.
 func addressToInteger(mask net.IP) uint32 {
 	var i uint32
@@ -133,10 +137,10 @@ func ToCIDR(address, netmask string) string {
 }
 
 func (inf *NetworkInterface) Same(connectionType, vnet string) bool {
-	if (inf.ConnectionType == "custom" && connectionType == "custom") || (inf.ConnectionType == "bridged" && connectionType == "bridged") {
-		return inf.VNet == vnet
+	if (equalIgnoreCase(inf.ConnectionType, "custom") && equalIgnoreCase(connectionType, "custom")) || (equalIgnoreCase(inf.ConnectionType, "bridged") && equalIgnoreCase(connectionType, "bridged")) {
+		return equalIgnoreCase(inf.VNet, vnet)
 	} else {
-		return inf.ConnectionType == connectionType
+		return equalIgnoreCase(inf.ConnectionType, connectionType)
 	}
 }
 

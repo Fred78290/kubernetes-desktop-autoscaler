@@ -3,12 +3,12 @@ package utils
 import (
 	"encoding/json"
 	"os"
+	"strings"
 	"syscall"
 	"time"
 
-	"github.com/Fred78290/kubernetes-desktop-autoscaler/types"
-
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/context"
+	"github.com/Fred78290/kubernetes-desktop-autoscaler/types"
 	"gopkg.in/yaml.v2"
 	apiv1 "k8s.io/api/core/v1"
 )
@@ -180,4 +180,8 @@ func Values[M ~map[K]V, K comparable, V any](m M) []V {
 		r = append(r, v)
 	}
 	return r
+}
+
+func EqualIgnoreCase(a, b string) bool {
+	return strings.ToLower(a) == strings.ToLower(b)
 }
