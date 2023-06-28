@@ -76,25 +76,21 @@ func (v *externalgrpcServerApp) NodeGroups(ctx context.Context, request *externa
 	}, nil
 }
 
+func (v *externalgrpcServerApp) getNodeGroupForNode(node *externalgrpc.ExternalGrpcNode) (*AutoScalerServerNodeGroup, error) {
+	if nodegroupName, found := node.Annotations[constantes.AnnotationNodeGroupName]; found {
+		return v.appServer.getNodeGroup(nodegroupName)
+	} else {
+		return v.appServer.getNodeGroupForProvidedID(node.ProviderID)
+	}
+}
+
 // NodeGroupForNode returns the node group for the given node.
 // The node group id is an empty string if the node should not
 // be processed by cluster autoscaler.
 func (v *externalgrpcServerApp) NodeGroupForNode(ctx context.Context, request *externalgrpc.NodeGroupForNodeRequest) (*externalgrpc.NodeGroupForNodeResponse, error) {
 	glog.Debugf("Call server NodeGroupForNode: %v", request)
 
-	if nodegroupName, found := request.Node.Annotations[constantes.AnnotationNodeGroupName]; found {
-		nodeGroup, err := v.appServer.getNodeGroup(nodegroupName)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if nodeGroup == nil {
-			glog.Infof("Nodegroup not found for node:%s", request.Node.Name)
-
-			return nil, fmt.Errorf(constantes.ErrNodeGroupForNodeNotFound, nodegroupName, request.Node.Name)
-		}
-
+	if nodeGroup, _ := v.getNodeGroupForNode(request.Node); nodeGroup != nil {
 		return &externalgrpc.NodeGroupForNodeResponse{
 			NodeGroup: &externalgrpc.NodeGroup{
 				Id:      nodeGroup.NodeGroupIdentifier,
@@ -103,7 +99,7 @@ func (v *externalgrpcServerApp) NodeGroupForNode(ctx context.Context, request *e
 			},
 		}, nil
 	} else {
-		glog.Warnf("Annotation %s not found for node:%s", constantes.AnnotationNodeGroupName, request.Node.Name)
+		glog.Warnf(constantes.ErrNodeGroupNotFoundForProviderID, request.Node.ProviderID)
 
 		return &externalgrpc.NodeGroupForNodeResponse{}, nil
 	}

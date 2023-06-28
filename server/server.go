@@ -71,6 +71,18 @@ func (s *AutoScalerServerApp) getResourceLimiter() *types.ResourceLimiter {
 	return s.ResourceLimiter
 }
 
+func (s *AutoScalerServerApp) getNodeGroupForProvidedID(providedID string) (*AutoScalerServerNodeGroup, error) {
+	for _, group := range s.Groups {
+		for _, node := range group.AllNodes() {
+			if node.generateProviderID() == providedID {
+				return group, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf(constantes.ErrNodeGroupNotFoundForProviderID, providedID)
+}
+
 func (s *AutoScalerServerApp) getNodeGroup(nodegroupName string) (*AutoScalerServerNodeGroup, error) {
 	if ng, found := s.Groups[nodegroupName]; found {
 		return ng, nil
@@ -302,6 +314,14 @@ func (s *AutoScalerServerApp) NodeGroups(ctx context.Context, request *apigrpc.C
 	}, nil
 }
 
+func (s *AutoScalerServerApp) getNodeGroupForNode(node *apiv1.Node) (*AutoScalerServerNodeGroup, error) {
+	if nodegroupName, found := node.Annotations[constantes.AnnotationNodeGroupName]; found {
+		return s.getNodeGroup(nodegroupName)
+	} else {
+		return s.getNodeGroupForProvidedID(node.Spec.ProviderID)
+	}
+}
+
 // NodeGroupForNode returns the node group for the given node, nil if the node
 // should not be processed by cluster autoscaler, or non-nil error if such
 // occurred. Must be implemented.
@@ -328,30 +348,7 @@ func (s *AutoScalerServerApp) NodeGroupForNode(ctx context.Context, request *api
 		}, nil
 	}
 
-	if nodegroupName, found := node.Annotations[constantes.AnnotationNodeGroupName]; found {
-		nodeGroup, err := s.getNodeGroup(nodegroupName)
-
-		if err != nil {
-			return &apigrpc.NodeGroupForNodeReply{
-				Response: &apigrpc.NodeGroupForNodeReply_Error{
-					Error: &apigrpc.Error{
-						Code:   constantes.CloudProviderError,
-						Reason: err.Error(),
-					},
-				},
-			}, nil
-		}
-
-		if nodeGroup == nil {
-			glog.Errorf("Nodegroup not found for node:%s", node.Name)
-
-			return &apigrpc.NodeGroupForNodeReply{
-				Response: &apigrpc.NodeGroupForNodeReply_NodeGroup{
-					NodeGroup: &apigrpc.NodeGroup{},
-				},
-			}, nil
-		}
-
+	if nodeGroup, err := s.getNodeGroupForNode(node); err == nil {
 		return &apigrpc.NodeGroupForNodeReply{
 			Response: &apigrpc.NodeGroupForNodeReply_NodeGroup{
 				NodeGroup: &apigrpc.NodeGroup{
@@ -361,8 +358,11 @@ func (s *AutoScalerServerApp) NodeGroupForNode(ctx context.Context, request *api
 		}, nil
 	} else {
 		return &apigrpc.NodeGroupForNodeReply{
-			Response: &apigrpc.NodeGroupForNodeReply_NodeGroup{
-				NodeGroup: &apigrpc.NodeGroup{},
+			Response: &apigrpc.NodeGroupForNodeReply_Error{
+				Error: &apigrpc.Error{
+					Code:   constantes.CloudProviderError,
+					Reason: err.Error(),
+				},
 			},
 		}, nil
 	}

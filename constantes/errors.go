@@ -25,6 +25,9 @@ const (
 	// ErrNodeGroupNotFound error msg
 	ErrNodeGroupNotFound = "node group %s not found"
 
+	// ErrNodeGroupNotFoundForProviderID error msg
+	ErrNodeGroupNotFoundForProviderID = "node group not found for providerID: %s"
+
 	// ErrNodeGroupForNodeNotFound error msg
 	ErrNodeGroupForNodeNotFound = "nodeGroup %s not found for Node %s"
 
