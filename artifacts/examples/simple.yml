@@ -1,14 +1,14 @@
 apiVersion: "nodemanager.aldunelabs.com/v1alpha1"
 kind: "ManagedNode"
 metadata:
-  name: "desktop-macmini-k3s-master-02"
+  name: "desktop-macmini-k3s-managed-01"
 spec:
   nodegroup: desktop-macmini-k3s
-  controlPlane: true
+  controlPlane: false
   allowDeployment: false
-  vcpus: 4
-  memorySizeInMb: 4096
-  diskSizeInMb: 20480
+  vcpus: 2
+  memorySizeInMb: 2048
+  diskSizeInMb: 10240
   labels:
   - demo-label.aldunelabs.com=demo
   - sample-label.aldunelabs.com=sample
@@ -19,11 +19,11 @@ spec:
     -
       vnet: vmnet8
       device: vmxnet3
-      address: 192.168.172.21
+      address: 192.168.172.80
       netmask: 255.255.255.0
       gateway: 192.168.172.2
     -
       vnet: vmnet1
       device: vmxnet3
-      address: 172.16.251.21
+      address: 172.16.251.80
       netmask: 255.255.255.0

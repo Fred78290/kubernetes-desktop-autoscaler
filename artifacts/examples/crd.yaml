@@ -46,7 +46,9 @@ spec:
                   items:
                     type: object
                     properties:
-                      address:
+                      vnet:
+                        type: string
+                      device:
                         type: string
                       dhcp:
                         type: boolean

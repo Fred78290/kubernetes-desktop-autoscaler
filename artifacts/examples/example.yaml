@@ -1,9 +1,9 @@
 apiVersion: "nodemanager.aldunelabs.com/v1alpha1"
 kind: "ManagedNode"
 metadata:
-  name: "desktop-ca-k8s-managed-01"
+  name: "desktop-macmini-k3s-managed-01"
 spec:
-  nodegroup: desktop-ca-k8s
+  nodegroup: desktop-macmini-k3s
   controlPlane: false
   allowDeployment: false
   vcpus: 2
@@ -17,25 +17,23 @@ spec:
   - sample-annotation.aldunelabs.com=sample
   networks:
     -
-      vnet: vmnet4
-      type: custom
+      vnet: vmnet8
       device: vmxnet3
-      address: 10.0.0.80
+      address: 192.168.172.80
       netmask: 255.255.255.0
-      gateway: 10.0.0.1
+      gateway: 192.168.172.2
     -
-      vnet: vmnet2
-      type: custom
+      vnet: vmnet1
       device: vmxnet3
-      address: 192.168.1.80
+      address: 172.16.251.80
       netmask: 255.255.255.0
 ---
 apiVersion: "nodemanager.aldunelabs.com/v1alpha1"
 kind: "ManagedNode"
 metadata:
-  name: "desktop-ca-k8s-managed-02"
+  name: "desktop-macmini-k3s-managed-02"
 spec:
-  nodegroup: desktop-ca-k8s
+  nodegroup: desktop-macmini-k3s
   controlPlane: false
   allowDeployment: false
   vcpus: 2
@@ -49,25 +47,23 @@ spec:
   - sample-annotation.aldunelabs.com=sample
   networks:
     -
-      vnet: vmnet4
-      type: custom
+      vnet: vmnet8
       device: vmxnet3
-      address: 10.0.0.81
+      address: 192.168.172.81
       netmask: 255.255.255.0
-      gateway: 10.0.0.1
+      gateway: 192.168.172.2
     -
-      vnet: vmnet2
-      type: custom
+      vnet: vmnet1
       device: vmxnet3
-      address: 192.168.1.81
+      address: 172.16.251.81
       netmask: 255.255.255.0
 ---
 apiVersion: "nodemanager.aldunelabs.com/v1alpha1"
 kind: "ManagedNode"
 metadata:
-  name: "desktop-ca-k8s-managed-03"
+  name: "desktop-macmini-k3s-managed-03"
 spec:
-  nodegroup: desktop-ca-k8s
+  nodegroup: desktop-macmini-k3s
   controlPlane: false
   allowDeployment: false
   vcpus: 2
@@ -81,15 +77,13 @@ spec:
   - sample-annotation.aldunelabs.com=sample
   networks:
     -
-      vnet: vmnet4
-      type: custom
+      vnet: vmnet8
       device: vmxnet3
-      address: 10.0.0.82
+      address: 192.168.172.83
       netmask: 255.255.255.0
-      gateway: 10.0.0.1
+      gateway: 192.168.172.2
     -
       vnet: vmnet2
-      type: custom
       device: vmxnet3
       dhcp: true
       use-dhcp-routes: false
