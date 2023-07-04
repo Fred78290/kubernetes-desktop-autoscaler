@@ -329,10 +329,6 @@ func (vm *AutoScalerServerNode) launchVM(c types.ClientGenerator, nodeLabels, sy
 
 		err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
 
-	} else if err = config.SetAutoStart(vm.VMUUID, true); err != nil {
-
-		err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)
-
 	} else if vm.IPAddress, err = config.WaitForIP(vm.VMUUID, config.Timeout); err != nil {
 
 		err = fmt.Errorf(constantes.ErrStartVMFailed, vm.NodeName, err)

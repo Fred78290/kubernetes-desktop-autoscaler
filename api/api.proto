@@ -64,6 +64,7 @@ message CreateRequest {
     map<string, string> guestInfos = 7;
 	bool linked = 8;
 	bool register = 9;
+	bool autostart = 10;
 }
 
 message CreateReply {

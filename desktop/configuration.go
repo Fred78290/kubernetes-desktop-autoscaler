@@ -172,6 +172,8 @@ func (conf *Configuration) CreateWithContext(ctx *context.Context, name, userNam
 		DiskSizeInMb: int32(disk),
 		Linked:       conf.LinkedClone,
 		Networks:     BuildNetworkInterface(conf.Network.Interfaces, nodeIndex),
+		Register:     false,
+		Autostart:    true,
 	}
 
 	if request.GuestInfos, err = BuildCloudInit(name, userName, authKey, tz, cloudInit, network, nodeIndex, allowUpgrade); err != nil {
