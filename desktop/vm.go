@@ -3,9 +3,15 @@ package desktop
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
 	"fmt"
+	"os"
 	"time"
+
+	glog "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh"
 
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/api"
 	"github.com/Fred78290/kubernetes-desktop-autoscaler/constantes"
@@ -76,6 +82,28 @@ func encodeObject(name string, object interface{}) (string, error) {
 	return result, err
 }
 
+func generatePublicKey(authKey string) string {
+	publicKey := ""
+
+	if priv, err := os.ReadFile(authKey); err != nil {
+		glog.Errorf("unable to read:%s, reason: %v", authKey, err)
+	} else {
+		block, _ := pem.Decode([]byte(priv))
+
+		if block == nil || block.Type != "RSA PRIVATE KEY" {
+			glog.Errorf("failed to decode PEM block containing public key")
+		} else if key, err := x509.ParsePKCS1PrivateKey(block.Bytes); err != nil {
+			glog.Errorf("unable to parse private key:%s, reason: %v", authKey, err)
+		} else if publicRsaKey, err := ssh.NewPublicKey(key); err != nil {
+			glog.Errorf("unable to generate public key:%s, reason: %v", authKey, err)
+		} else {
+			publicKey = string(ssh.MarshalAuthorizedKey(publicRsaKey))
+		}
+	}
+
+	return publicKey
+}
+
 func buildVendorData(userName, authKey, tz string, allowUpgrade bool) interface{} {
 	if userName != "" && authKey != "" {
 		return map[string]interface{}{
@@ -86,7 +114,7 @@ func buildVendorData(userName, authKey, tz string, allowUpgrade bool) interface{
 				"default",
 			},
 			"ssh_authorized_keys": []string{
-				authKey,
+				generatePublicKey(authKey),
 			},
 			"system_info": map[string]interface{}{
 				"default_user": map[string]string{
