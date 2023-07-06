@@ -138,7 +138,7 @@ func (vm *AutoScalerServerNode) waitForSshReady() error {
 	return context.PollImmediate(time.Second, time.Duration(vm.serverConfig.SSH.WaitSshReadyInSeconds)*time.Second, func() (done bool, err error) {
 		if _, err := utils.Sudo(vm.serverConfig.SSH, vm.IPAddress, vm.Configuration.Timeout, "ls"); err != nil {
 			if strings.HasSuffix(err.Error(), "connection refused") {
-				glog.Warnf("Wait ssh ready for node: %s, address: %s.", vm.NodeName, vm.IPAddress)
+				glog.Debugf("Wait ssh ready for node: %s, address: %s.", vm.NodeName, vm.IPAddress)
 				return false, nil
 			}
 
