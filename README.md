@@ -6,12 +6,14 @@
 
 Kubernetes autoscaler for VMWare Fusion 13 or VMWare workstation including a custom resource controller to create managed node without code
 
+It use [vmware-desktop-autoscaler-utility](https://github.com/Fred78290/vmware-desktop-autoscaler-utility) to pilot VMWare workstation or VMWare Fusion.
 ### Supported releases ###
 
-* 1.25.7
-    - This version is supported kubernetes v1.25 and support k3s
-* 1.26.2
+* 1.26.6
     - This version is supported kubernetes v1.26 and support k3s
+
+* 1.27.3
+    - This version is supported kubernetes v1.27 and support k3s
 
 ## How it works
 
@@ -55,7 +57,7 @@ Now it's possible to disable dhcp-default routes and custom route
 
 ## CRD controller
 
-This new release include a CRD controller allowing to create kubernetes node without use of govc or code. Just by apply a configuration file, you have the ability to create nodes on the fly.
+This new release include a CRD controller allowing to create kubernetes node without use of code. Just by apply a configuration file, you have the ability to create nodes on the fly.
 
 As exemple you can take a look on [artifacts/examples/example.yaml](artifacts/examples/example.yaml) on execute the following command to create a new node
 
