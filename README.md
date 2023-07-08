@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/Fred78290/kubernetes-desktop-autoscaler/actions/workflows/tag.yml/badge.svg?branch=main)](https://github.com/Fred78290/kubernetes-desktop-autoscaler/actions/workflows/tag.yml)
+[![Build Status](https://github.com/Fred78290/kubernetes-desktop-autoscaler/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/Fred78290/kubernetes-desktop-autoscaler/actions/workflows/tag.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Fred78290_kubernetes-desktop-autoscaler&metric=alert_status)](https://sonarcloud.io/dashboard?id=Fred78290_kubernetes-desktop-autoscaler)
 [![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/Fred78290/kubernetes-desktop-autoscaler/blob/master/LICENSE)
 
