@@ -3,6 +3,7 @@ package desktop
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
@@ -82,48 +83,51 @@ func encodeObject(name string, object interface{}) (string, error) {
 	return result, err
 }
 
-func generatePublicKey(authKey string) string {
-	publicKey := ""
+func generatePublicKey(authKey string) (publicKey string, err error) {
+	var priv []byte
+	var key *rsa.PrivateKey
+	var publicRsaKey ssh.PublicKey
 
-	if priv, err := os.ReadFile(authKey); err != nil {
+	if priv, err = os.ReadFile(authKey); err != nil {
 		glog.Errorf("unable to read:%s, reason: %v", authKey, err)
 	} else {
 		block, _ := pem.Decode([]byte(priv))
 
 		if block == nil || block.Type != "RSA PRIVATE KEY" {
 			glog.Errorf("failed to decode PEM block containing public key")
-		} else if key, err := x509.ParsePKCS1PrivateKey(block.Bytes); err != nil {
+		} else if key, err = x509.ParsePKCS1PrivateKey(block.Bytes); err != nil {
 			glog.Errorf("unable to parse private key:%s, reason: %v", authKey, err)
-		} else if publicRsaKey, err := ssh.NewPublicKey(key); err != nil {
+		} else if publicRsaKey, err = ssh.NewPublicKey(&key.PublicKey); err != nil {
 			glog.Errorf("unable to generate public key:%s, reason: %v", authKey, err)
 		} else {
 			publicKey = string(ssh.MarshalAuthorizedKey(publicRsaKey))
 		}
 	}
 
-	return publicKey
+	return
 }
 
 func buildVendorData(userName, authKey, tz string, allowUpgrade bool) interface{} {
 	if userName != "" && authKey != "" {
-		return map[string]interface{}{
-			"package_update":  allowUpgrade,
-			"package_upgrade": allowUpgrade,
-			"timezone":        tz,
-			"users": []string{
-				"default",
-			},
-			"ssh_authorized_keys": []string{
-				generatePublicKey(authKey),
-			},
-			"system_info": map[string]interface{}{
-				"default_user": map[string]string{
-					"name": userName,
+		if pubKey, err := generatePublicKey(authKey); err == nil {
+			return map[string]interface{}{
+				"package_update":  allowUpgrade,
+				"package_upgrade": allowUpgrade,
+				"timezone":        tz,
+				"users": []string{
+					"default",
 				},
-			},
+				"ssh_authorized_keys": []string{
+					pubKey,
+				},
+				"system_info": map[string]interface{}{
+					"default_user": map[string]string{
+						"name": userName,
+					},
+				},
+			}
 		}
 	}
-
 	return map[string]interface{}{
 		"package_update":  allowUpgrade,
 		"package_upgrade": allowUpgrade,
