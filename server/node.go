@@ -135,15 +135,19 @@ func (vm *AutoScalerServerNode) recopyKubernetesPKIIfNeeded() error {
 }
 
 func (vm *AutoScalerServerNode) waitForSshReady() error {
+	glog.Infof("Wait ssh ready for node: %s, address: %s.", vm.NodeName, vm.IPAddress)
+
 	return context.PollImmediate(time.Second, time.Duration(vm.serverConfig.SSH.WaitSshReadyInSeconds)*time.Second, func() (done bool, err error) {
 		if _, err := utils.Sudo(vm.serverConfig.SSH, vm.IPAddress, vm.Configuration.Timeout, "ls"); err != nil {
 			if strings.HasSuffix(err.Error(), "connection refused") {
-				glog.Debugf("Wait ssh ready for node: %s, address: %s.", vm.NodeName, vm.IPAddress)
+				glog.Debugf("SSH not ready for node: %s, address: %s.", vm.NodeName, vm.IPAddress)
 				return false, nil
 			}
 
 			return false, fmt.Errorf("unable to ssh: %s, reason:%v", vm.NodeName, err)
 		}
+
+		glog.Infof("SSH is ready for node: %s, address: %s.", vm.NodeName, vm.IPAddress)
 
 		return true, nil
 	})
