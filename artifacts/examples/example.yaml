@@ -1,9 +1,9 @@
 apiVersion: "nodemanager.aldunelabs.com/v1alpha1"
 kind: "ManagedNode"
 metadata:
-  name: "desktop-macmini-k3s-managed-01"
+  name: "desktop-imac-k3s-managed-01"
 spec:
-  nodegroup: desktop-macmini-k3s
+  nodegroup: desktop-imac-k3s
   controlPlane: false
   allowDeployment: false
   vcpus: 2
@@ -31,9 +31,9 @@ spec:
 apiVersion: "nodemanager.aldunelabs.com/v1alpha1"
 kind: "ManagedNode"
 metadata:
-  name: "desktop-macmini-k3s-managed-02"
+  name: "desktop-imac-k3s-managed-02"
 spec:
-  nodegroup: desktop-macmini-k3s
+  nodegroup: desktop-imac-k3s
   controlPlane: false
   allowDeployment: false
   vcpus: 2
@@ -61,9 +61,9 @@ spec:
 apiVersion: "nodemanager.aldunelabs.com/v1alpha1"
 kind: "ManagedNode"
 metadata:
-  name: "desktop-macmini-k3s-managed-03"
+  name: "desktop-imac-k3s-managed-03"
 spec:
-  nodegroup: desktop-macmini-k3s
+  nodegroup: desktop-imac-k3s
   controlPlane: false
   allowDeployment: false
   vcpus: 2
