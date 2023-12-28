@@ -13,8 +13,9 @@
 # limitations under the License.
 
 #ARG BASEIMAGE=gcr.io/distroless/static:latest-amd64
-ARG BASEIMAGE=gcr.io/distroless/static:nonroot
-FROM alpine AS builder
+#ARG BASEIMAGE=gcr.io/distroless/static:nonroot
+ARG BASEIMAGE=alpine:3.19
+FROM alpine:3.19 AS builder
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
@@ -24,10 +25,22 @@ RUN ls / ; mv /$TARGETPLATFORM/vmware-desktop-autoscaler /vmware-desktop-autosca
 FROM $BASEIMAGE
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
+ARG USER=default
+
+ENV HOME /home/$USER
 
 LABEL maintainer="Frederic Boltz <frederic.boltz@gmail.com>"
 
 COPY --from=builder /vmware-desktop-autoscaler /usr/local/bin/vmware-desktop-autoscaler
+
+# add new user
+RUN apk update \
+	&& apk add --no-cache sudo openssh \
+	&& adduser -D $USER -u 65532 \
+	&& echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER \
+	&& chmod 0440 /etc/sudoers.d/$USER
+
+USER $USER
 
 EXPOSE 5200
 
